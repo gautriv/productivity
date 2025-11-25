@@ -22,6 +22,7 @@
         const api = {
             async get(url) {
                 const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
             },
             async post(url, data) {
@@ -30,6 +31,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
             },
             async put(url, data) {
@@ -38,10 +40,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
             },
             async delete(url) {
                 const res = await fetch(url, { method: 'DELETE' });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
             }
         };
@@ -154,7 +158,7 @@
         function TaskItem({ task, onStatusChange, onDelete, index }) {
             const handleCheck = () => {
                 const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-                onStatusChange(task.daily_task_id, newStatus);
+                onStatusChange(task.id, newStatus);
             };
 
             const netPoints = task.status === 'completed' 
@@ -196,7 +200,7 @@
                     </div>
 
                     <div className="task-actions">
-                        <button className="task-action-btn delete" onClick={() => onDelete(task.daily_task_id)}>
+                        <button className="task-action-btn delete" onClick={() => onDelete(task.id)}>
                             ×
                         </button>
                     </div>
@@ -219,7 +223,16 @@
 
             const handleConfirm = () => {
                 const totalMinutes = (hours * 60) + minutes;
+
+                if (totalMinutes === 0) {
+                    alert('Please enter a valid time (at least 1 minute)');
+                    return;
+                }
+
+                console.log('Confirming time entry:', totalMinutes, 'minutes');
                 onConfirm(totalMinutes);
+
+                // Reset state
                 setHours(0);
                 setMinutes(0);
             };
@@ -1261,8 +1274,8 @@
             };
 
             const handleStatusChange = async (dailyTaskId, newStatus) => {
-                const task = tasks.find(t => t.daily_task_id === dailyTaskId);
-                
+                const task = tasks.find(t => t.id === dailyTaskId);
+
                 // If completing a task, show time entry modal
                 if (newStatus === 'completed' && task) {
                     setTimeEntryModal({
@@ -1280,20 +1293,31 @@
 
             const handleTimeEntryConfirm = async (actualTime) => {
                 const { taskId } = timeEntryModal;
-                
-                await api.put(`/api/daily/task/${taskId}/status`, { 
-                    status: 'completed',
-                    actual_time: actualTime
-                });
-                
-                setTimeEntryModal({
-                    isOpen: false,
-                    taskId: null,
-                    taskTitle: '',
-                    estimatedTime: 0
-                });
-                
-                loadData();
+
+                try {
+                    console.log('Completing task:', taskId, 'with time:', actualTime);
+
+                    const response = await api.put(`/api/daily/task/${taskId}/status`, {
+                        status: 'completed',
+                        actual_time: actualTime
+                    });
+
+                    console.log('Task completed successfully:', response);
+
+                    // Close modal immediately
+                    setTimeEntryModal({
+                        isOpen: false,
+                        taskId: null,
+                        taskTitle: '',
+                        estimatedTime: 0
+                    });
+
+                    // Reload data
+                    await loadData();
+                } catch (error) {
+                    console.error('Error completing task:', error);
+                    alert('Failed to complete task. Please try again.');
+                }
             };
 
             const handleDeleteTask = async (dailyTaskId) => {
