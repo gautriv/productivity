@@ -824,6 +824,349 @@
             background: var(--bg-tertiary);
         }
 
+        /* WORLD-CLASS ANIMATIONS */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .animate-slide-right {
+            animation: slideInRight 0.4s ease-out forwards;
+        }
+
+        .animate-slide-left {
+            animation: slideInLeft 0.4s ease-out forwards;
+        }
+
+        .animate-scale {
+            animation: scaleIn 0.3s ease-out forwards;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .animate-bounce {
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        /* Gamification styles */
+        .level-badge {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+
+        .xp-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .xp-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            border-radius: 10px;
+            transition: width 0.6s ease-out;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        .achievement-badge {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .achievement-badge:hover {
+            border-color: var(--accent-green);
+            transform: translateX(5px);
+        }
+
+        .achievement-badge.locked {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+
+        .achievement-badge.unlocked {
+            border-color: var(--accent-green);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), transparent);
+        }
+
+        .achievement-icon {
+            font-size: 28px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            border-radius: 10px;
+        }
+
+        .achievement-badge.unlocked .achievement-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(245, 158, 11, 0.05));
+            border: 2px solid var(--accent-yellow);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .challenge-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--accent-yellow);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .challenge-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .challenge-reward {
+            font-size: 12px;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .productivity-score {
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--accent-green) 0deg,
+                var(--accent-green) calc(var(--score) * 3.6deg),
+                var(--bg-elevated) calc(var(--score) * 3.6deg),
+                var(--bg-elevated) 360deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: spin 1s ease-out;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .score-inner {
+            width: 100px;
+            height: 100px;
+            background: var(--bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .score-value {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-green);
+        }
+
+        .score-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .motivational-quote {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1));
+            border-left: 3px solid var(--accent-blue);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 14px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            z-index: 2000;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 400px;
+        }
+
+        .toast-notification.success {
+            border-left: 4px solid var(--accent-green);
+        }
+
+        .toast-notification.achievement {
+            border-left: 4px solid var(--accent-purple);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), var(--bg-elevated));
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Smooth transitions for all interactive elements */
+        button, .task-item, .stat-card, .summary-card, .insight-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Hover effects */
+        .task-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Loading shimmer effect */
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                var(--bg-tertiary) 0%,
+                var(--bg-elevated) 50%,
+                var(--bg-tertiary) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
         /* Responsive */
         @media (max-width: 1200px) {
             .app {
@@ -907,7 +1250,7 @@
         };
 
         // Components
-        function Sidebar({ summary, onRollover }) {
+        function Sidebar({ summary, onRollover, userStats, productivityScore }) {
             return (
                 <aside className="sidebar">
                     <div className="logo">
@@ -915,7 +1258,23 @@
                         <span className="logo-text">Productivity</span>
                     </div>
 
-                    <div className="summary-card">
+                    <div className="summary-card animate-fade-in">
+                        <div className="summary-label">Level & XP</div>
+                        <div className="level-badge">
+                            ⭐ Level {userStats.level}
+                        </div>
+                        <div className="xp-bar">
+                            <div 
+                                className="xp-progress" 
+                                style={{ width: `${userStats.xp_percentage}%` }}
+                            />
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                            {userStats.current_xp} / {userStats.xp_needed} XP
+                        </div>
+                    </div>
+
+                    <div className="summary-card animate-fade-in" style={{ animationDelay: '0.1s' }}>
                         <div className="summary-label">Net Points (30d)</div>
                         <div className={`summary-value ${summary.net_points >= 0 ? 'positive' : 'negative'}`}>
                             {summary.net_points >= 0 ? '+' : ''}{summary.net_points}
@@ -925,19 +1284,33 @@
                         </div>
                     </div>
 
-                    <div className="summary-card">
-                        <div className="summary-label">Completion Rate</div>
-                        <div className="summary-value neutral">{summary.completion_rate}%</div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                            {summary.completed_tasks} of {summary.total_tasks} tasks
+                    <div className="productivity-score animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                        <div className="summary-label">Productivity Score</div>
+                        <div className="score-circle" style={{ '--score': productivityScore.score }}>
+                            <div className="score-inner">
+                                <div className="score-value">{productivityScore.score}</div>
+                                <div className="score-label">/ 100</div>
+                            </div>
+                        </div>
+                        <div style={{ 
+                            fontSize: '13px', 
+                            fontWeight: 600, 
+                            color: productivityScore.color === 'green' ? 'var(--accent-green)' : 
+                                   productivityScore.color === 'blue' ? 'var(--accent-blue)' :
+                                   productivityScore.color === 'yellow' ? 'var(--accent-yellow)' : 
+                                   'var(--accent-red)'
+                        }}>
+                            {productivityScore.rating}
                         </div>
                     </div>
 
-                    <div className="summary-card">
-                        <div className="summary-label">Active Days</div>
-                        <div className="summary-value neutral">{summary.active_days}</div>
+                    <div className="summary-card animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                        <div className="summary-label">Achievements</div>
+                        <div className="summary-value neutral">
+                            {userStats.achievements_unlocked}/{userStats.total_achievements}
+                        </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                            {summary.avg_tasks_per_day} tasks/day avg
+                            {userStats.total_completed} tasks completed
                         </div>
                     </div>
 
@@ -952,7 +1325,7 @@
             );
         }
 
-        function TaskItem({ task, onStatusChange, onDelete }) {
+        function TaskItem({ task, onStatusChange, onDelete, index }) {
             const handleCheck = () => {
                 const newStatus = task.status === 'completed' ? 'pending' : 'completed';
                 onStatusChange(task.id, newStatus);
@@ -963,7 +1336,10 @@
                 : -task.penalty_points;
 
             return (
-                <div className={`task-item ${task.status}`}>
+                <div 
+                    className={`task-item ${task.status} animate-fade-in`}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                >
                     <div 
                         className={`task-checkbox ${task.status === 'completed' ? 'completed' : ''}`}
                         onClick={handleCheck}
@@ -1121,7 +1497,7 @@
             );
         }
 
-        function InsightsPanel({ insights, trends }) {
+        function InsightsPanel({ insights, trends, achievements, dailyChallenge, motivationalQuote }) {
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
 
@@ -1206,6 +1582,54 @@
 
             return (
                 <aside className="insights-panel">
+                    {motivationalQuote && (
+                        <div className="motivational-quote animate-fade-in">
+                            {motivationalQuote}
+                        </div>
+                    )}
+
+                    {dailyChallenge && (
+                        <div className="challenge-card animate-scale">
+                            <div className="challenge-title">
+                                🎯 Daily Challenge
+                            </div>
+                            <div className="challenge-description">
+                                {dailyChallenge.challenge}
+                            </div>
+                            <div className="challenge-reward">
+                                +{dailyChallenge.bonus_points} bonus points
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="panel-title">🏆 Achievements</div>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px' }}>
+                        {achievements.slice(0, 5).map((achievement, i) => (
+                            <div 
+                                key={achievement.id} 
+                                className={`achievement-badge ${achievement.unlocked ? 'unlocked' : 'locked'} animate-slide-right`}
+                                style={{ animationDelay: `${i * 0.05}s` }}
+                            >
+                                <div className="achievement-icon">
+                                    {achievement.icon}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>
+                                        {achievement.name}
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                        {achievement.description}
+                                    </div>
+                                </div>
+                                {achievement.unlocked && (
+                                    <div style={{ fontSize: '11px', color: 'var(--accent-green)', fontWeight: 600 }}>
+                                        +{achievement.points}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
                     <div className="panel-title">📊 Trends (14 days)</div>
                     
                     <div className="chart-container">
@@ -1219,14 +1643,36 @@
                             Complete more tasks to unlock insights about your productivity patterns.
                         </div>
                     ) : (
-                        insights.slice(0, 5).map((insight, i) => (
-                            <div key={i} className={`insight-card ${insight.type}`}>
+                        insights.slice(0, 3).map((insight, i) => (
+                            <div key={i} className={`insight-card ${insight.type} animate-fade-in`} style={{ animationDelay: `${i * 0.1}s` }}>
                                 <div className="insight-title">{insight.title}</div>
                                 <div className="insight-message">{insight.message}</div>
                             </div>
                         ))
                     )}
                 </aside>
+            );
+        }
+
+        // Toast Notification Component
+        function Toast({ message, type = 'success', onClose }) {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 4000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            return (
+                <div className={`toast-notification ${type}`}>
+                    <div className="toast-title">
+                        {type === 'achievement' && '🏆'}
+                        {type === 'success' && '✅'}
+                        {type === 'levelup' && '⭐'}
+                        {message.title || 'Success'}
+                    </div>
+                    {message.description && (
+                        <div className="toast-message">{message.description}</div>
+                    )}
+                </div>
             );
         }
 
@@ -1247,6 +1693,26 @@
             const [trends, setTrends] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [loading, setLoading] = useState(true);
+            
+            // New state for gamification
+            const [userStats, setUserStats] = useState({
+                level: 1,
+                current_xp: 0,
+                xp_needed: 50,
+                xp_percentage: 0,
+                achievements_unlocked: 0,
+                total_achievements: 0,
+                total_completed: 0
+            });
+            const [achievements, setAchievements] = useState([]);
+            const [productivityScore, setProductivityScore] = useState({
+                score: 0,
+                rating: 'Fair',
+                color: 'yellow'
+            });
+            const [dailyChallenge, setDailyChallenge] = useState(null);
+            const [motivationalQuote, setMotivationalQuote] = useState('');
+            const [toast, setToast] = useState(null);
 
             const dateStr = formatDate(selectedDate);
 
@@ -1254,12 +1720,28 @@
             const loadData = useCallback(async () => {
                 setLoading(true);
                 try {
-                    const [tasksData, statsData, summaryData, insightsData, trendsData] = await Promise.all([
+                    const [
+                        tasksData, 
+                        statsData, 
+                        summaryData, 
+                        insightsData, 
+                        trendsData,
+                        userStatsData,
+                        achievementsData,
+                        scoreData,
+                        challengeData,
+                        quoteData
+                    ] = await Promise.all([
                         api.get(`/api/daily/${dateStr}`),
                         api.get(`/api/analytics/daily/${dateStr}`),
                         api.get('/api/analytics/summary?days=30'),
                         api.get('/api/analytics/insights?days=14'),
-                        api.get('/api/analytics/trends?days=30')
+                        api.get('/api/analytics/trends?days=30'),
+                        api.get('/api/motivation/stats'),
+                        api.get('/api/motivation/achievements'),
+                        api.get(`/api/analytics/productivity-score/${dateStr}?window=7`),
+                        api.get(`/api/motivation/daily-challenge/${dateStr}`),
+                        api.get('/api/motivation/quote')
                     ]);
 
                     setTasks(tasksData);
@@ -1267,6 +1749,11 @@
                     setSummary(summaryData);
                     setInsights(insightsData);
                     setTrends(trendsData);
+                    setUserStats(userStatsData);
+                    setAchievements(achievementsData);
+                    setProductivityScore(scoreData);
+                    setDailyChallenge(challengeData);
+                    setMotivationalQuote(quoteData.quote);
                 } catch (err) {
                     console.error('Error loading data:', err);
                 }
@@ -1276,6 +1763,32 @@
             useEffect(() => {
                 loadData();
             }, [loadData]);
+            
+            // Check for achievements when tasks change
+            useEffect(() => {
+                const checkAchievements = async () => {
+                    try {
+                        const result = await api.post('/api/motivation/check-achievements', {});
+                        if (result.newly_unlocked && result.newly_unlocked.length > 0) {
+                            result.newly_unlocked.forEach(achievement => {
+                                setToast({
+                                    title: `🏆 Achievement Unlocked!`,
+                                    description: `${achievement.name} - ${achievement.description}`
+                                });
+                                setTimeout(() => {
+                                    loadData(); // Reload to update achievement list
+                                }, 1000);
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Error checking achievements:', err);
+                    }
+                };
+                
+                if (tasks.length > 0) {
+                    checkAchievements();
+                }
+            }, [tasks.length]);
 
             // Handlers
             const handlePrevDay = () => {
@@ -1335,7 +1848,12 @@
 
             return (
                 <div className="app">
-                    <Sidebar summary={summary} onRollover={handleRollover} />
+                    <Sidebar 
+                        summary={summary} 
+                        onRollover={handleRollover}
+                        userStats={userStats}
+                        productivityScore={productivityScore}
+                    />
 
                     <main className="main">
                         <header className="header">
@@ -1404,10 +1922,11 @@
                                         </div>
                                     </div>
                                 ) : (
-                                    tasks.map(task => (
+                                    tasks.map((task, index) => (
                                         <TaskItem
                                             key={task.id}
                                             task={task}
+                                            index={index}
                                             onStatusChange={handleStatusChange}
                                             onDelete={handleDeleteTask}
                                         />
@@ -1417,7 +1936,13 @@
                         </div>
                     </main>
 
-                    <InsightsPanel insights={insights} trends={trends} />
+                    <InsightsPanel 
+                        insights={insights} 
+                        trends={trends}
+                        achievements={achievements}
+                        dailyChallenge={dailyChallenge}
+                        motivationalQuote={motivationalQuote}
+                    />
 
                     <AddTaskModal
                         isOpen={isModalOpen}
@@ -1425,6 +1950,14 @@
                         onAdd={handleAddTask}
                         selectedDate={selectedDate}
                     />
+
+                    {toast && (
+                        <Toast 
+                            message={toast} 
+                            type="achievement" 
+                            onClose={() => setToast(null)}
+                        />
+                    )}
                 </div>
             );
         }

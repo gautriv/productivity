@@ -1,0 +1,313 @@
+"""
+API Blueprint
+Task management endpoints - maintains all existing features
+"""
+from flask import Blueprint, jsonify, request
+from datetime import datetime, date, timedelta
+from app.models.database import get_db, calculate_task_points, calculate_penalty
+from app.utils.helpers import handle_errors, validate_task_data
+
+api_bp = Blueprint('api', __name__)
+
+# ----- Task Management -----
+
+@api_bp.route('/tasks', methods=['GET'])
+@handle_errors
+def get_tasks():
+    """Get all non-archived tasks"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT t.*, 
+               (SELECT COUNT(*) FROM tasks st WHERE st.parent_id = t.id) as subtask_count,
+               (SELECT COUNT(*) FROM tasks st 
+                JOIN daily_tasks dt ON st.id = dt.task_id 
+                WHERE st.parent_id = t.id AND dt.status = 'completed') as subtasks_completed
+        FROM tasks t 
+        WHERE t.archived = 0 AND t.parent_id IS NULL
+        ORDER BY t.created_at DESC
+    ''')
+    tasks = [dict(row) for row in cursor.fetchall()]
+    return jsonify(tasks)
+
+@api_bp.route('/tasks', methods=['POST'])
+@handle_errors
+def create_task():
+    """Create a new task"""
+    data = request.json
+    
+    # Validate data
+    errors = validate_task_data(data)
+    if errors:
+        return jsonify({'errors': errors}), 400
+    
+    db = get_db()
+    cursor = db.cursor()
+    
+    cursor.execute('''
+        INSERT INTO tasks (title, description, complexity, cognitive_load, time_estimate, parent_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (
+        data['title'],
+        data.get('description', ''),
+        data.get('complexity', 3),
+        data.get('cognitive_load', 'active_work'),
+        data.get('time_estimate', 30),
+        data.get('parent_id')
+    ))
+    
+    task_id = cursor.lastrowid
+    db.commit()
+    
+    cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+    task = dict(cursor.fetchone())
+    
+    return jsonify(task), 201
+
+@api_bp.route('/tasks/<int:task_id>', methods=['PUT'])
+@handle_errors
+def update_task(task_id):
+    """Update a task"""
+    data = request.json
+    
+    # Validate data
+    errors = validate_task_data(data)
+    if errors:
+        return jsonify({'errors': errors}), 400
+    
+    db = get_db()
+    cursor = db.cursor()
+    
+    cursor.execute('''
+        UPDATE tasks 
+        SET title = ?, description = ?, complexity = ?, cognitive_load = ?, time_estimate = ?
+        WHERE id = ?
+    ''', (
+        data['title'],
+        data.get('description', ''),
+        data.get('complexity', 3),
+        data.get('cognitive_load', 'active_work'),
+        data.get('time_estimate', 30),
+        task_id
+    ))
+    
+    db.commit()
+    cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+    task = dict(cursor.fetchone())
+    
+    return jsonify(task)
+
+@api_bp.route('/tasks/<int:task_id>', methods=['DELETE'])
+@handle_errors
+def delete_task(task_id):
+    """Archive a task (soft delete)"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('UPDATE tasks SET archived = 1 WHERE id = ?', (task_id,))
+    db.commit()
+    return jsonify({'success': True})
+
+@api_bp.route('/tasks/<int:task_id>/subtasks', methods=['GET'])
+@handle_errors
+def get_subtasks(task_id):
+    """Get subtasks for a task"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM tasks WHERE parent_id = ? AND archived = 0', (task_id,))
+    subtasks = [dict(row) for row in cursor.fetchall()]
+    return jsonify(subtasks)
+
+# ----- Daily Task Management -----
+
+@api_bp.route('/daily/<date_str>', methods=['GET'])
+@handle_errors
+def get_daily_tasks(date_str):
+    """Get all tasks for a specific day"""
+    db = get_db()
+    cursor = db.cursor()
+    
+    cursor.execute('''
+        SELECT dt.*, t.title, t.description, t.complexity, t.cognitive_load, t.time_estimate,
+               (SELECT COUNT(*) FROM tasks st WHERE st.parent_id = t.id) as subtask_count
+        FROM daily_tasks dt
+        JOIN tasks t ON dt.task_id = t.id
+        WHERE dt.scheduled_date = ?
+        ORDER BY 
+            CASE dt.status 
+                WHEN 'in_progress' THEN 1 
+                WHEN 'pending' THEN 2 
+                WHEN 'completed' THEN 3 
+                WHEN 'abandoned' THEN 4 
+            END,
+            t.complexity DESC
+    ''', (date_str,))
+    
+    tasks = [dict(row) for row in cursor.fetchall()]
+    
+    # Calculate points for each task
+    for task in tasks:
+        task['points'] = calculate_task_points(task)
+        task['net_points'] = task['points'] - task['penalty_points'] if task['status'] == 'completed' else -task['penalty_points']
+    
+    return jsonify(tasks)
+
+@api_bp.route('/daily/<date_str>/add', methods=['POST'])
+@handle_errors
+def add_task_to_day(date_str):
+    """Add a task to a specific day"""
+    data = request.json
+    task_id = data['task_id']
+    
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Check if task already exists for this day
+    cursor.execute('SELECT id FROM daily_tasks WHERE task_id = ? AND scheduled_date = ?', (task_id, date_str))
+    if cursor.fetchone():
+        return jsonify({'error': 'Task already scheduled for this day'}), 400
+    
+    cursor.execute('''
+        INSERT INTO daily_tasks (task_id, scheduled_date, rolled_over_count, penalty_points)
+        VALUES (?, ?, ?, ?)
+    ''', (task_id, date_str, data.get('rolled_over_count', 0), data.get('penalty_points', 0)))
+    
+    db.commit()
+    return jsonify({'success': True}), 201
+
+@api_bp.route('/daily/<date_str>/quick-add', methods=['POST'])
+@handle_errors
+def quick_add_task(date_str):
+    """Create a new task and add it to the day in one step"""
+    data = request.json
+    
+    # Validate data
+    errors = validate_task_data(data)
+    if errors:
+        return jsonify({'errors': errors}), 400
+    
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Create the task
+    cursor.execute('''
+        INSERT INTO tasks (title, description, complexity, cognitive_load, time_estimate)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (
+        data['title'],
+        data.get('description', ''),
+        data.get('complexity', 3),
+        data.get('cognitive_load', 'active_work'),
+        data.get('time_estimate', 30)
+    ))
+    
+    task_id = cursor.lastrowid
+    
+    # Add to daily tasks
+    cursor.execute('''
+        INSERT INTO daily_tasks (task_id, scheduled_date)
+        VALUES (?, ?)
+    ''', (task_id, date_str))
+    
+    db.commit()
+    
+    # Return the full task info
+    cursor.execute('''
+        SELECT dt.*, t.title, t.description, t.complexity, t.cognitive_load, t.time_estimate
+        FROM daily_tasks dt
+        JOIN tasks t ON dt.task_id = t.id
+        WHERE dt.id = last_insert_rowid()
+    ''')
+    task = dict(cursor.fetchone())
+    task['points'] = calculate_task_points(task)
+    
+    return jsonify(task), 201
+
+@api_bp.route('/daily/task/<int:daily_task_id>/status', methods=['PUT'])
+@handle_errors
+def update_task_status(daily_task_id):
+    """Update the status of a daily task"""
+    data = request.json
+    new_status = data['status']
+    
+    db = get_db()
+    cursor = db.cursor()
+    
+    completed_at = datetime.now().isoformat() if new_status == 'completed' else None
+    actual_time = data.get('actual_time')
+    
+    cursor.execute('''
+        UPDATE daily_tasks 
+        SET status = ?, completed_at = ?, actual_time = ?
+        WHERE id = ?
+    ''', (new_status, completed_at, actual_time, daily_task_id))
+    
+    db.commit()
+    return jsonify({'success': True})
+
+@api_bp.route('/daily/task/<int:daily_task_id>', methods=['DELETE'])
+@handle_errors
+def remove_daily_task(daily_task_id):
+    """Remove a task from a day (doesn't delete the task itself)"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('DELETE FROM daily_tasks WHERE id = ?', (daily_task_id,))
+    db.commit()
+    return jsonify({'success': True})
+
+# ----- Rollover System -----
+
+@api_bp.route('/rollover', methods=['POST'])
+@handle_errors
+def process_rollover():
+    """Process end-of-day rollover for incomplete tasks"""
+    data = request.json
+    from_date = data.get('from_date', (date.today() - timedelta(days=1)).isoformat())
+    to_date = data.get('to_date', date.today().isoformat())
+    
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Get incomplete tasks from the previous day
+    cursor.execute('''
+        SELECT dt.*, t.title, t.complexity, t.cognitive_load, t.time_estimate
+        FROM daily_tasks dt
+        JOIN tasks t ON dt.task_id = t.id
+        WHERE dt.scheduled_date = ? AND dt.status IN ('pending', 'in_progress')
+    ''', (from_date,))
+    
+    incomplete_tasks = cursor.fetchall()
+    rolled_over = []
+    
+    for task in incomplete_tasks:
+        new_rolled_count = task['rolled_over_count'] + 1
+        new_penalty = calculate_penalty(new_rolled_count)
+        
+        # Check if already exists in target date
+        cursor.execute('SELECT id FROM daily_tasks WHERE task_id = ? AND scheduled_date = ?', 
+                      (task['task_id'], to_date))
+        
+        if not cursor.fetchone():
+            cursor.execute('''
+                INSERT INTO daily_tasks (task_id, scheduled_date, rolled_over_count, penalty_points, status)
+                VALUES (?, ?, ?, ?, 'pending')
+            ''', (task['task_id'], to_date, new_rolled_count, new_penalty))
+            
+            rolled_over.append({
+                'task_id': task['task_id'],
+                'title': task['title'],
+                'rolled_over_count': new_rolled_count,
+                'penalty_points': new_penalty
+            })
+        
+        # Mark original as abandoned
+        cursor.execute('''
+            UPDATE daily_tasks SET status = 'abandoned' WHERE id = ?
+        ''', (task['id'],))
+    
+    db.commit()
+    
+    return jsonify({
+        'rolled_over_count': len(rolled_over),
+        'tasks': rolled_over
+    })
+
