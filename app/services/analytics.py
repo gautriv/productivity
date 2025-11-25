@@ -261,6 +261,231 @@ class ProductivityAnalytics:
         }
     
     @staticmethod
+    def analyze_burnout_risk(days=14):
+        """
+        Comprehensive burnout risk analysis
+        Analyzes multiple factors to detect burnout warning signs
+        Returns risk level (low/moderate/high/severe) and detailed insights
+        """
+        db = get_db()
+        cursor = db.cursor()
+        
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days)
+        
+        # Get all data for analysis
+        cursor.execute('''
+            SELECT 
+                dt.scheduled_date,
+                dt.status,
+                dt.rolled_over_count,
+                dt.actual_time,
+                t.complexity,
+                t.cognitive_load,
+                t.time_estimate
+            FROM daily_tasks dt
+            JOIN tasks t ON dt.task_id = t.id
+            WHERE dt.scheduled_date BETWEEN ? AND ?
+            ORDER BY dt.scheduled_date
+        ''', (start_date.isoformat(), end_date.isoformat()))
+        
+        all_tasks = [dict(row) for row in cursor.fetchall()]
+        
+        if len(all_tasks) < 5:
+            return {
+                'risk_level': 'insufficient_data',
+                'risk_score': 0,
+                'message': 'Not enough data to analyze burnout risk. Complete more tasks over several days.',
+                'factors': []
+            }
+        
+        # Initialize scoring
+        burnout_indicators = []
+        risk_score = 0
+        max_score = 100
+        
+        # Factor 1: Declining completion rate (25 points)
+        daily_completion = defaultdict(lambda: {'total': 0, 'completed': 0})
+        for task in all_tasks:
+            d = task['scheduled_date']
+            daily_completion[d]['total'] += 1
+            if task['status'] == 'completed':
+                daily_completion[d]['completed'] += 1
+        
+        dates = sorted(daily_completion.keys())
+        if len(dates) >= 7:
+            first_half = dates[:len(dates)//2]
+            second_half = dates[len(dates)//2:]
+            
+            first_rate = sum(daily_completion[d]['completed'] for d in first_half) / sum(daily_completion[d]['total'] for d in first_half)
+            second_rate = sum(daily_completion[d]['completed'] for d in second_half) / sum(daily_completion[d]['total'] for d in second_half)
+            
+            decline = (first_rate - second_rate) * 100
+            if decline > 20:
+                risk_score += 25
+                burnout_indicators.append({
+                    'factor': 'Declining Performance',
+                    'severity': 'high',
+                    'score': 25,
+                    'description': f'Completion rate dropped {decline:.0f}% in recent days',
+                    'recommendation': 'Consider taking a break or reducing task load'
+                })
+            elif decline > 10:
+                risk_score += 15
+                burnout_indicators.append({
+                    'factor': 'Slight Performance Decline',
+                    'severity': 'moderate',
+                    'score': 15,
+                    'description': f'Completion rate decreased {decline:.0f}%',
+                    'recommendation': 'Monitor your energy levels and consider lighter tasks'
+                })
+        
+        # Factor 2: High rollover rate (20 points)
+        total_tasks = len(all_tasks)
+        rolled_tasks = sum(1 for t in all_tasks if t['rolled_over_count'] > 0)
+        rollover_rate = rolled_tasks / total_tasks
+        
+        if rollover_rate > 0.4:
+            risk_score += 20
+            burnout_indicators.append({
+                'factor': 'High Task Rollover',
+                'severity': 'high',
+                'score': 20,
+                'description': f'{rollover_rate*100:.0f}% of tasks are rolled over multiple times',
+                'recommendation': 'Break tasks into smaller pieces or reduce commitments'
+            })
+        elif rollover_rate > 0.25:
+            risk_score += 10
+            burnout_indicators.append({
+                'factor': 'Moderate Task Rollover',
+                'severity': 'moderate',
+                'score': 10,
+                'description': f'{rollover_rate*100:.0f}% of tasks are being postponed',
+                'recommendation': 'Review task priorities and adjust expectations'
+            })
+        
+        # Factor 3: Excessive deep work without breaks (20 points)
+        deep_work_tasks = [t for t in all_tasks if t['cognitive_load'] == 'deep_work']
+        if deep_work_tasks:
+            deep_work_days = defaultdict(int)
+            for t in deep_work_tasks:
+                deep_work_days[t['scheduled_date']] += t.get('time_estimate', 0)
+            
+            high_deep_work_days = sum(1 for time in deep_work_days.values() if time > 240)  # >4 hours
+            
+            if high_deep_work_days > len(dates) * 0.6:
+                risk_score += 20
+                burnout_indicators.append({
+                    'factor': 'Excessive Deep Work',
+                    'severity': 'high',
+                    'score': 20,
+                    'description': f'{high_deep_work_days} days with >4 hours of deep work',
+                    'recommendation': 'Schedule regular breaks and mix task types'
+                })
+            elif high_deep_work_days > len(dates) * 0.4:
+                risk_score += 10
+                burnout_indicators.append({
+                    'factor': 'High Deep Work Load',
+                    'severity': 'moderate',
+                    'score': 10,
+                    'description': 'Consistent high cognitive load detected',
+                    'recommendation': 'Ensure adequate rest between intense sessions'
+                })
+        
+        # Factor 4: Working on weekends (15 points)
+        weekend_work = sum(1 for d in dates if datetime.fromisoformat(d).weekday() >= 5)
+        weekend_ratio = weekend_work / len(dates) if dates else 0
+        
+        if weekend_ratio > 0.6:
+            risk_score += 15
+            burnout_indicators.append({
+                'factor': 'Insufficient Rest Days',
+                'severity': 'high',
+                'score': 15,
+                'description': f'{weekend_ratio*100:.0f}% of your days include weekend work',
+                'recommendation': 'Protect weekend time for rest and recovery'
+            })
+        elif weekend_ratio > 0.3:
+            risk_score += 8
+            burnout_indicators.append({
+                'factor': 'Regular Weekend Work',
+                'severity': 'moderate',
+                'score': 8,
+                'description': 'Working most weekends',
+                'recommendation': 'Try to keep at least one day per week work-free'
+            })
+        
+        # Factor 5: Time estimation accuracy declining (10 points)
+        tasks_with_actual = [t for t in all_tasks if t.get('actual_time') and t.get('time_estimate')]
+        if len(tasks_with_actual) >= 5:
+            overrun_ratio = sum(1 for t in tasks_with_actual if t['actual_time'] > t['time_estimate'] * 1.5) / len(tasks_with_actual)
+            
+            if overrun_ratio > 0.5:
+                risk_score += 10
+                burnout_indicators.append({
+                    'factor': 'Frequent Time Overruns',
+                    'severity': 'moderate',
+                    'score': 10,
+                    'description': f'{overrun_ratio*100:.0f}% of tasks take 50%+ longer than expected',
+                    'recommendation': 'Sign of fatigue - adjust estimates or reduce complexity'
+                })
+        
+        # Factor 6: No completed tasks in recent days (10 points)
+        recent_days = dates[-3:] if len(dates) >= 3 else dates
+        no_completion_days = sum(1 for d in recent_days if daily_completion[d]['completed'] == 0)
+        
+        if no_completion_days >= 2:
+            risk_score += 10
+            burnout_indicators.append({
+                'factor': 'Recent Stagnation',
+                'severity': 'moderate',
+                'score': 10,
+                'description': f'{no_completion_days} recent days with no completions',
+                'recommendation': 'Possible motivational burnout - try easier wins'
+            })
+        
+        # Determine risk level
+        if risk_score >= 60:
+            risk_level = 'severe'
+            level_message = 'SEVERE BURNOUT RISK - Immediate action recommended'
+            color = 'red'
+        elif risk_score >= 40:
+            risk_level = 'high'
+            level_message = 'HIGH BURNOUT RISK - Take preventive action soon'
+            color = 'orange'
+        elif risk_score >= 20:
+            risk_level = 'moderate'
+            level_message = 'MODERATE BURNOUT RISK - Monitor closely'
+            color = 'yellow'
+        else:
+            risk_level = 'low'
+            level_message = 'LOW BURNOUT RISK - You\'re doing well!'
+            color = 'green'
+        
+        # Calculate overall health metrics
+        avg_completion = sum(daily_completion[d]['completed'] for d in dates) / len(dates) if dates else 0
+        avg_total = sum(daily_completion[d]['total'] for d in dates) / len(dates) if dates else 0
+        completion_rate = (avg_completion / avg_total * 100) if avg_total > 0 else 0
+        
+        return {
+            'risk_level': risk_level,
+            'risk_score': risk_score,
+            'max_score': max_score,
+            'percentage': round(risk_score / max_score * 100, 1),
+            'message': level_message,
+            'color': color,
+            'factors': burnout_indicators,
+            'health_metrics': {
+                'completion_rate': round(completion_rate, 1),
+                'rollover_rate': round(rollover_rate * 100, 1),
+                'weekend_work_rate': round(weekend_ratio * 100, 1),
+                'days_analyzed': len(dates),
+                'total_tasks': total_tasks
+            },
+            'recommendations': _generate_burnout_recommendations(risk_level, burnout_indicators)
+        }
+    
+    @staticmethod
     def detect_productivity_patterns(days=30):
         """
         Detect patterns in productivity using time-series analysis
@@ -370,4 +595,78 @@ class ProductivityAnalytics:
             'weekly_performance': {day_names[dow]: round(rate * 100, 1) 
                                   for dow, rate in avg_by_day.items()}
         }
+
+
+def _generate_burnout_recommendations(risk_level, indicators):
+    """Generate personalized recommendations based on burnout risk"""
+    recommendations = []
+    
+    if risk_level == 'severe':
+        recommendations.append({
+            'priority': 'urgent',
+            'title': 'Take Immediate Action',
+            'description': 'Your burnout risk is severe. Consider taking a break, reducing your workload significantly, or seeking support.'
+        })
+    
+    if risk_level in ['severe', 'high']:
+        recommendations.append({
+            'priority': 'high',
+            'title': 'Reduce Task Load',
+            'description': 'Cut your daily task list by 30-50%. Focus only on essential tasks.'
+        })
+        recommendations.append({
+            'priority': 'high',
+            'title': 'Schedule Recovery Time',
+            'description': 'Block out time each day for rest, hobbies, or activities that energize you.'
+        })
+    
+    if risk_level in ['moderate', 'high', 'severe']:
+        recommendations.append({
+            'priority': 'medium',
+            'title': 'Balance Task Types',
+            'description': 'Mix deep work with lighter admin tasks. Avoid scheduling all complex tasks in one day.'
+        })
+        recommendations.append({
+            'priority': 'medium',
+            'title': 'Set Boundaries',
+            'description': 'Establish clear work hours and stick to them. Protect your weekends and evenings.'
+        })
+    
+    # Specific recommendations based on indicators
+    factor_types = [f['factor'] for f in indicators]
+    
+    if 'Excessive Deep Work' in factor_types or 'High Deep Work Load' in factor_types:
+        recommendations.append({
+            'priority': 'medium',
+            'title': 'Limit Deep Work Sessions',
+            'description': 'Cap deep work at 4 hours per day. Take 10-15 minute breaks every 90 minutes.'
+        })
+    
+    if 'High Task Rollover' in factor_types or 'Moderate Task Rollover' in factor_types:
+        recommendations.append({
+            'priority': 'medium',
+            'title': 'Improve Task Sizing',
+            'description': 'Break large tasks into smaller, manageable pieces that can be completed in one session.'
+        })
+    
+    if 'Insufficient Rest Days' in factor_types:
+        recommendations.append({
+            'priority': 'high',
+            'title': 'Protect Weekend Time',
+            'description': 'Designate at least one full day per week as completely work-free for rest and recovery.'
+        })
+    
+    if risk_level == 'low':
+        recommendations.append({
+            'priority': 'low',
+            'title': 'Maintain Good Habits',
+            'description': 'You\'re doing great! Keep balancing your workload and taking regular breaks.'
+        })
+        recommendations.append({
+            'priority': 'low',
+            'title': 'Stay Vigilant',
+            'description': 'Continue monitoring your energy levels and adjust your schedule when needed.'
+        })
+    
+    return recommendations
 

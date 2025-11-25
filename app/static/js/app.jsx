@@ -1,21 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productivity Tracker</title>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        {% raw %}
         const { useState, useEffect, useRef, useCallback } = React;
 
         // API helpers
@@ -154,7 +136,7 @@
         function TaskItem({ task, onStatusChange, onDelete, index }) {
             const handleCheck = () => {
                 const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-                onStatusChange(task.daily_task_id, newStatus);
+                onStatusChange(task.id, newStatus);
             };
 
             const netPoints = task.status === 'completed' 
@@ -196,136 +178,9 @@
                     </div>
 
                     <div className="task-actions">
-                        <button className="task-action-btn delete" onClick={() => onDelete(task.daily_task_id)}>
+                        <button className="task-action-btn delete" onClick={() => onDelete(task.id)}>
                             ×
                         </button>
-                    </div>
-                </div>
-            );
-        }
-
-        // Time Entry Modal for task completion
-        function TimeEntryModal({ isOpen, onClose, onConfirm, taskTitle, estimatedTime }) {
-            const [hours, setHours] = useState(0);
-            const [minutes, setMinutes] = useState(0);
-
-            useEffect(() => {
-                if (isOpen && estimatedTime) {
-                    // Pre-fill with estimated time
-                    setHours(Math.floor(estimatedTime / 60));
-                    setMinutes(estimatedTime % 60);
-                }
-            }, [isOpen, estimatedTime]);
-
-            const handleConfirm = () => {
-                const totalMinutes = (hours * 60) + minutes;
-                onConfirm(totalMinutes);
-                setHours(0);
-                setMinutes(0);
-            };
-
-            if (!isOpen) return null;
-
-            return (
-                <div className="modal-overlay" onClick={onClose}>
-                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
-                        <div className="modal-header">
-                            <h2 className="modal-title">⏱️ Time Spent</h2>
-                            <button className="modal-close" onClick={onClose}>&times;</button>
-                        </div>
-
-                        <div className="modal-body">
-                            <div style={{ marginBottom: '20px' }}>
-                                <div style={{ 
-                                    fontSize: '14px', 
-                                    color: 'var(--text-secondary)', 
-                                    marginBottom: '8px' 
-                                }}>
-                                    Completing: <strong style={{ color: 'var(--text-primary)' }}>{taskTitle}</strong>
-                                </div>
-                                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                                    Estimated: {Math.floor(estimatedTime / 60)}h {estimatedTime % 60}m
-                                </div>
-                            </div>
-
-                            <div style={{ 
-                                fontSize: '13px', 
-                                fontWeight: '600', 
-                                marginBottom: '12px',
-                                color: 'var(--text-primary)' 
-                            }}>
-                                How much time did you actually spend?
-                            </div>
-
-                            <div style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: '1fr 1fr', 
-                                gap: '12px',
-                                marginBottom: '20px' 
-                            }}>
-                                <div className="form-group" style={{ margin: 0 }}>
-                                    <label className="form-label">Hours</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        min="0"
-                                        max="24"
-                                        value={hours}
-                                        onChange={e => setHours(Math.max(0, parseInt(e.target.value) || 0))}
-                                        style={{ textAlign: 'center', fontSize: '18px' }}
-                                    />
-                                </div>
-                                <div className="form-group" style={{ margin: 0 }}>
-                                    <label className="form-label">Minutes</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        min="0"
-                                        max="59"
-                                        value={minutes}
-                                        onChange={e => setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                                        style={{ textAlign: 'center', fontSize: '18px' }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div style={{ 
-                                background: 'var(--bg-tertiary)', 
-                                padding: '12px', 
-                                borderRadius: '8px',
-                                marginBottom: '20px',
-                                textAlign: 'center'
-                            }}>
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                                    Total Time
-                                </div>
-                                <div style={{ 
-                                    fontSize: '24px', 
-                                    fontWeight: '700', 
-                                    fontFamily: 'JetBrains Mono, monospace',
-                                    color: 'var(--accent-green)' 
-                                }}>
-                                    {hours}h {minutes}m
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button 
-                                    className="btn btn-secondary" 
-                                    onClick={onClose}
-                                    style={{ flex: 1 }}
-                                >
-                                    Cancel
-                                </button>
-                                <button 
-                                    className="btn btn-primary" 
-                                    onClick={handleConfirm}
-                                    style={{ flex: 1 }}
-                                >
-                                    ✓ Complete Task
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             );
@@ -566,14 +421,14 @@
                             <h2 className="modal-title">📊 Productivity Trends Analysis</h2>
                             <button className="modal-close" onClick={onClose}>&times;</button>
                         </div>
-                    
+
                         <div className="modal-body">
                             <div className="modal-section">
                                 <div className="modal-section-title">📈 30-Day Trend Overview</div>
                                 <div className="trend-chart-large">
                                     <canvas ref={chartRef} height="250"></canvas>
                                 </div>
-                    </div>
+                            </div>
 
                             <div className="modal-section">
                                 <div className="modal-section-title">📊 Key Metrics</div>
@@ -655,232 +510,6 @@
             );
         }
 
-        // Burnout Analysis Modal
-        function BurnoutModal({ isOpen, onClose, burnoutAnalysis }) {
-            if (!isOpen) return null;
-
-            const getBurnoutColor = (level) => {
-                const colors = {
-                    'low': 'var(--accent-green)',
-                    'moderate': 'var(--accent-yellow)',
-                    'high': 'var(--accent-orange)',
-                    'severe': 'var(--accent-red)'
-                };
-                return colors[level] || 'var(--text-muted)';
-            };
-
-            return (
-                <div className="modal-overlay" onClick={onClose}>
-                    <div className="modal detail-modal animate-scale" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2 className="modal-title">🔥 Burnout Risk Analysis</h2>
-                            <button className="modal-close" onClick={onClose}>&times;</button>
-                        </div>
-
-                        <div className="modal-body">
-                            {burnoutAnalysis && burnoutAnalysis.risk_level !== 'insufficient_data' ? (
-                                <>
-                                    <div className="modal-section">
-                                        <div className="modal-section-title">📊 Current Risk Assessment</div>
-                                        
-                                        <div className="detail-grid">
-                                            <div className="detail-card" style={{ gridColumn: '1 / -1' }}>
-                                                <div className="detail-card-label">Current Risk Level</div>
-                                                <div className="detail-card-value" style={{ 
-                                                    color: getBurnoutColor(burnoutAnalysis.risk_level),
-                                                    fontSize: '32px'
-                                                }}>
-                                                    {burnoutAnalysis.risk_level.toUpperCase()}
-                                                </div>
-                                                <div className="detail-card-sub" style={{ fontSize: '14px', marginTop: '8px' }}>
-                                                    {burnoutAnalysis.message}
-                                                </div>
-                                                
-                                                <div style={{ 
-                                                    marginTop: '16px', 
-                                                    background: 'var(--bg-elevated)', 
-                                                    borderRadius: '8px',
-                                                    overflow: 'hidden',
-                                                    height: '24px',
-                                                    position: 'relative'
-                                                }}>
-                                                    <div style={{
-                                                        width: `${burnoutAnalysis.percentage}%`,
-                                                        height: '100%',
-                                                        background: `linear-gradient(90deg, ${getBurnoutColor(burnoutAnalysis.risk_level)}, ${getBurnoutColor(burnoutAnalysis.risk_level)}dd)`,
-                                                        transition: 'width 1s ease',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'flex-end',
-                                                        paddingRight: '12px',
-                                                        fontWeight: '700',
-                                                        fontSize: '12px',
-                                                        fontFamily: 'JetBrains Mono, monospace'
-                                                    }}>
-                                                        {burnoutAnalysis.risk_score}/{burnoutAnalysis.max_score}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {burnoutAnalysis.health_metrics && (
-                                            <div className="detail-grid" style={{ marginTop: '16px' }}>
-                                                <div className="detail-card">
-                                                    <div className="detail-card-label">Completion Rate</div>
-                                                    <div className="detail-card-value positive">
-                                                        {burnoutAnalysis.health_metrics.completion_rate}%
-                                                    </div>
-                                                </div>
-                                                <div className="detail-card">
-                                                    <div className="detail-card-label">Rollover Rate</div>
-                                                    <div className={`detail-card-value ${
-                                                        burnoutAnalysis.health_metrics.rollover_rate > 40 ? 'negative' :
-                                                        burnoutAnalysis.health_metrics.rollover_rate > 25 ? 'neutral' : 'positive'
-                                                    }`}>
-                                                        {burnoutAnalysis.health_metrics.rollover_rate}%
-                                                    </div>
-                                                </div>
-                                                <div className="detail-card">
-                                                    <div className="detail-card-label">Weekend Work</div>
-                                                    <div className={`detail-card-value ${
-                                                        burnoutAnalysis.health_metrics.weekend_work_rate > 60 ? 'negative' :
-                                                        burnoutAnalysis.health_metrics.weekend_work_rate > 30 ? 'neutral' : 'positive'
-                                                    }`}>
-                                                        {burnoutAnalysis.health_metrics.weekend_work_rate}%
-                                                    </div>
-                                                </div>
-                                                <div className="detail-card">
-                                                    <div className="detail-card-label">Days Analyzed</div>
-                                                    <div className="detail-card-value neutral">
-                                                        {burnoutAnalysis.health_metrics.days_analyzed}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {burnoutAnalysis.factors && burnoutAnalysis.factors.length > 0 && (
-                                        <div className="modal-section">
-                                            <div className="modal-section-title">⚠️ Risk Factors Detected</div>
-                                            <div className="insight-list">
-                                                {burnoutAnalysis.factors.map((factor, idx) => (
-                                                    <div key={idx} className={`insight-item-large ${
-                                                        factor.severity === 'high' ? 'warning' : 'info'
-                                                    }`}>
-                                                        <div className="insight-item-title">
-                                                            {factor.factor}
-                                                            <span style={{ 
-                                                                fontSize: '11px',
-                                                                padding: '2px 8px',
-                                                                borderRadius: '4px',
-                                                                background: factor.severity === 'high' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(234, 179, 8, 0.2)',
-                                                                color: factor.severity === 'high' ? 'var(--accent-red)' : 'var(--accent-yellow)',
-                                                                fontWeight: '600',
-                                                                marginLeft: 'auto'
-                                                            }}>
-                                                                {factor.severity.toUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                        <div className="insight-item-message">{factor.description}</div>
-                                                        <div className="recommendation-box" style={{ 
-                                                            marginTop: '12px',
-                                                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent)'
-                                                        }}>
-                                                            <div className="recommendation-title" style={{ color: 'var(--accent-blue)' }}>
-                                                                💡 Recommendation
-                                                            </div>
-                                                            <div className="recommendation-text">{factor.recommendation}</div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {burnoutAnalysis.recommendations && burnoutAnalysis.recommendations.length > 0 && (
-                                        <div className="modal-section">
-                                            <div className="modal-section-title">🎯 Personalized Action Plan</div>
-                                            <div className="recommendation-box">
-                                                {burnoutAnalysis.recommendations.map((rec, idx) => (
-                                                    <div key={idx} style={{ marginBottom: '16px', paddingLeft: '12px', borderLeft: `3px solid ${
-                                                        rec.priority === 'urgent' ? 'var(--accent-red)' :
-                                                        rec.priority === 'high' ? 'var(--accent-orange)' :
-                                                        rec.priority === 'medium' ? 'var(--accent-yellow)' : 'var(--accent-green)'
-                                                    }` }}>
-                                                        <div style={{ 
-                                                            fontWeight: '600', 
-                                                            fontSize: '13px',
-                                                            marginBottom: '4px',
-                                                            color: 'var(--text-primary)'
-                                                        }}>
-                                                            {rec.title}
-                                                            <span style={{ 
-                                                                fontSize: '10px',
-                                                                marginLeft: '8px',
-                                                                padding: '2px 6px',
-                                                                borderRadius: '3px',
-                                                                background: 'var(--bg-elevated)',
-                                                                color: 'var(--text-muted)',
-                                                                textTransform: 'uppercase'
-                                                            }}>
-                                                                {rec.priority}
-                                                            </span>
-                                                        </div>
-                                                        <div className="recommendation-text" style={{ fontSize: '12px' }}>
-                                                            {rec.description}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="modal-section">
-                                        <div className="modal-section-title">📚 Understanding Burnout</div>
-                                        <div className="pattern-card">
-                                            <div className="pattern-card-title">What is Burnout?</div>
-                                            <div className="pattern-card-content">
-                                                Burnout is a state of emotional, physical, and mental exhaustion caused by prolonged stress. 
-                                                It can reduce productivity, drain energy, and leave you feeling helpless and resentful.
-                                            </div>
-                                        </div>
-                                        <div className="pattern-card">
-                                            <div className="pattern-card-title">How We Detect It</div>
-                                            <div className="pattern-card-content">
-                                                Our algorithm analyzes 6 key factors: declining performance, task rollover, excessive deep work, 
-                                                weekend work patterns, time estimation accuracy, and recent stagnation. Each contributes to your overall risk score.
-                                            </div>
-                                        </div>
-                                        <div className="pattern-card">
-                                            <div className="pattern-card-title">Prevention is Key</div>
-                                            <div className="pattern-card-content">
-                                                Regular breaks, balanced workload, clear boundaries, and adequate rest are essential. 
-                                                Monitor your risk level weekly and take action early when you see warning signs.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div style={{ 
-                                    textAlign: 'center', 
-                                    padding: '60px 40px',
-                                    color: 'var(--text-muted)' 
-                                }}>
-                                    <div style={{ fontSize: '64px', marginBottom: '20px' }}>📊</div>
-                                    <div style={{ fontSize: '16px', marginBottom: '12px', color: 'var(--text-primary)' }}>
-                                        Not Enough Data Yet
-                                    </div>
-                                    <div style={{ fontSize: '14px' }}>
-                                        {burnoutAnalysis?.message || 'Complete more tasks over several days to unlock burnout risk analysis.'}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
         // Insights Detail Modal
         function InsightsModal({ isOpen, onClose, insights, cognitiveBalance }) {
             if (!isOpen) return null;
@@ -926,7 +555,7 @@
 
                             <div className="modal-section">
                                 <div className="modal-section-title">🎯 Personalized Insights</div>
-                    {insights.length === 0 ? (
+                                {insights.length === 0 ? (
                                     <div style={{ 
                                         textAlign: 'center', 
                                         padding: '40px',
@@ -934,8 +563,8 @@
                                     }}>
                                         <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
                                         <div>Complete more tasks to unlock personalized insights about your productivity patterns.</div>
-                        </div>
-                    ) : (
+                                    </div>
+                                ) : (
                                     <div className="insight-list">
                                         {insights.map((insight, i) => (
                                             <div key={i} className={`insight-item-large ${insight.type}`}>
@@ -944,7 +573,7 @@
                                                     {insight.type === 'success' && '✅'}
                                                     {insight.type === 'info' && 'ℹ️'}
                                                     {insight.title}
-                            </div>
+                                                </div>
                                                 <div className="insight-item-message">{insight.message}</div>
                                                 {insight.metric && (
                                                     <div className="insight-item-metric">
@@ -981,10 +610,88 @@
             );
         }
 
-        function InsightsPanel({ insights, trends, achievements, dailyChallenge, motivationalQuote, patterns, cognitiveBalance, burnoutAnalysis }) {
+        function InsightsPanel({ insights, trends, achievements, dailyChallenge, motivationalQuote, patterns, cognitiveBalance }) {
             const [showTrendsModal, setShowTrendsModal] = useState(false);
             const [showInsightsModal, setShowInsightsModal] = useState(false);
-            const [showBurnoutModal, setShowBurnoutModal] = useState(false);
+
+            useEffect(() => {
+                if (chartRef.current && trends.length > 0) {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+
+                    const ctx = chartRef.current.getContext('2d');
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: trends.slice(-14).map(t => {
+                                const d = new Date(t.date);
+                                return `${d.getMonth()+1}/${d.getDate()}`;
+                            }),
+                            datasets: [{
+                                label: 'Net Points',
+                                data: trends.slice(-14).map(t => t.net_points),
+                                borderColor: '#22c55e',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 3,
+                                pointHoverRadius: 5
+                            }, {
+                                label: 'Completion %',
+                                data: trends.slice(-14).map(t => t.completion_rate),
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'transparent',
+                                tension: 0.3,
+                                pointRadius: 3,
+                                pointHoverRadius: 5,
+                                yAxisID: 'percentage'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#a0a0a5',
+                                        font: { size: 10 }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#606065', font: { size: 10 } }
+                                },
+                                y: {
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#606065', font: { size: 10 } }
+                                },
+                                percentage: {
+                                    position: 'right',
+                                    min: 0,
+                                    max: 100,
+                                    grid: { display: false },
+                                    ticks: { 
+                                        color: '#606065', 
+                                        font: { size: 10 },
+                                        callback: v => v + '%'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [trends]);
 
             return (
                 <>
@@ -1047,14 +754,9 @@
                             <span>💡</span>
                             <span>View Insights</span>
                         </button>
+                    </aside>
 
-                        <button className="view-btn animate-fade-in" onClick={() => setShowBurnoutModal(true)}>
-                            <span>🔥</span>
-                            <span>View Burnout Analysis</span>
-                        </button>
-                </aside>
-
-                    <TrendsModal
+                    <TrendsModal 
                         isOpen={showTrendsModal} 
                         onClose={() => setShowTrendsModal(false)}
                         trends={trends}
@@ -1066,12 +768,6 @@
                         onClose={() => setShowInsightsModal(false)}
                         insights={insights}
                         cognitiveBalance={cognitiveBalance}
-                    />
-
-                    <BurnoutModal 
-                        isOpen={showBurnoutModal} 
-                        onClose={() => setShowBurnoutModal(false)}
-                        burnoutAnalysis={burnoutAnalysis}
                     />
                 </>
             );
@@ -1117,14 +813,6 @@
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [loading, setLoading] = useState(true);
             
-            // Time entry modal state
-            const [timeEntryModal, setTimeEntryModal] = useState({
-                isOpen: false,
-                taskId: null,
-                taskTitle: '',
-                estimatedTime: 0
-            });
-            
             // New state for gamification
             const [userStats, setUserStats] = useState({
                 level: 1,
@@ -1146,7 +834,6 @@
             const [toast, setToast] = useState(null);
             const [patterns, setPatterns] = useState(null);
             const [cognitiveBalance, setCognitiveBalance] = useState(null);
-            const [burnoutAnalysis, setBurnoutAnalysis] = useState(null);
 
             const dateStr = formatDate(selectedDate);
 
@@ -1166,8 +853,7 @@
                         challengeData,
                         quoteData,
                         patternsData,
-                        cognitiveBalanceData,
-                        burnoutData
+                        cognitiveBalanceData
                     ] = await Promise.all([
                         api.get(`/api/daily/${dateStr}`),
                         api.get(`/api/analytics/daily/${dateStr}`),
@@ -1180,8 +866,7 @@
                         api.get(`/api/motivation/daily-challenge/${dateStr}`),
                         api.get('/api/motivation/quote'),
                         api.get('/api/analytics/patterns?days=30'),
-                        api.get(`/api/analytics/cognitive-balance/${dateStr}`),
-                        api.get('/api/analytics/burnout-analysis?days=14')
+                        api.get(`/api/analytics/cognitive-balance/${dateStr}`)
                     ]);
 
                     setTasks(tasksData);
@@ -1196,7 +881,6 @@
                     setMotivationalQuote(quoteData.quote);
                     setPatterns(patternsData);
                     setCognitiveBalance(cognitiveBalanceData);
-                    setBurnoutAnalysis(burnoutData);
                 } catch (err) {
                     console.error('Error loading data:', err);
                 }
@@ -1261,38 +945,7 @@
             };
 
             const handleStatusChange = async (dailyTaskId, newStatus) => {
-                const task = tasks.find(t => t.daily_task_id === dailyTaskId);
-                
-                // If completing a task, show time entry modal
-                if (newStatus === 'completed' && task) {
-                    setTimeEntryModal({
-                        isOpen: true,
-                        taskId: dailyTaskId,
-                        taskTitle: task.title,
-                        estimatedTime: task.time_estimate || 0
-                    });
-                } else {
-                    // For other status changes, update directly
                 await api.put(`/api/daily/task/${dailyTaskId}/status`, { status: newStatus });
-                    loadData();
-                }
-            };
-
-            const handleTimeEntryConfirm = async (actualTime) => {
-                const { taskId } = timeEntryModal;
-                
-                await api.put(`/api/daily/task/${taskId}/status`, { 
-                    status: 'completed',
-                    actual_time: actualTime
-                });
-                
-                setTimeEntryModal({
-                    isOpen: false,
-                    taskId: null,
-                    taskTitle: '',
-                    estimatedTime: 0
-                });
-                
                 loadData();
             };
 
@@ -1418,7 +1071,6 @@
                         motivationalQuote={motivationalQuote}
                         patterns={patterns}
                         cognitiveBalance={cognitiveBalance}
-                        burnoutAnalysis={burnoutAnalysis}
                     />
 
                     <AddTaskModal
@@ -1426,14 +1078,6 @@
                         onClose={() => setIsModalOpen(false)}
                         onAdd={handleAddTask}
                         selectedDate={selectedDate}
-                    />
-
-                    <TimeEntryModal
-                        isOpen={timeEntryModal.isOpen}
-                        onClose={() => setTimeEntryModal({ isOpen: false, taskId: null, taskTitle: '', estimatedTime: 0 })}
-                        onConfirm={handleTimeEntryConfirm}
-                        taskTitle={timeEntryModal.taskTitle}
-                        estimatedTime={timeEntryModal.estimatedTime}
                     />
 
                     {toast && (
@@ -1448,7 +1092,3 @@
         }
 
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-        {% endraw %}
-    </script>
-</body>
-</html>

@@ -444,3 +444,11 @@ def get_patterns():
     patterns = ProductivityAnalytics.detect_productivity_patterns(days)
     return jsonify(patterns)
 
+@analytics_bp.route('/burnout-analysis', methods=['GET'])
+@handle_errors
+def get_burnout_analysis():
+    """Analyze burnout risk"""
+    days = request.args.get('days', 14, type=int)
+    analysis = ProductivityAnalytics.analyze_burnout_risk(days)
+    return jsonify(analysis)
+
