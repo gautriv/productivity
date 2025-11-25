@@ -115,7 +115,7 @@ python app.py
 python run.py
 ```
 
-The application will start on `http://localhost:5000`
+The application will start on `http://localhost:5555`
 
 ## Database Schema
 
@@ -239,7 +239,7 @@ xp_for_next_level = level^2 * 50
 
 ### Server
 - Host: localhost
-- Port: 5000
+- Port: 5555
 - Debug mode: Enabled in development
 
 ## Development

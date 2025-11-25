@@ -17,9 +17,9 @@ if __name__ == '__main__':
     print("  • Gamification & Achievements")
     print("  • Cognitive Load Optimization")
     print("  • Pattern Detection & Insights")
-    print("\n💫 Open http://localhost:5000 in your browser")
+    print("\n💫 Open http://localhost:5555 in your browser")
     print("💾 Database: productivity.db")
     print("="*60 + "\n")
-    
-    app.run(debug=True, port=5000)
+
+    app.run(debug=True, port=5555)
 
