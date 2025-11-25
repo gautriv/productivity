@@ -46,6 +46,13 @@
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.5;
+            overflow: hidden;
+        }
+
+        /* Smooth scrolling everywhere */
+        * {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         .mono {
@@ -56,7 +63,21 @@
         .app {
             display: grid;
             grid-template-columns: 280px 1fr 320px;
-            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            animation: appEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes appEntrance {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         /* Sidebar */
@@ -67,6 +88,56 @@
             display: flex;
             flex-direction: column;
             gap: 32px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        /* Custom scrollbar styling - Ultra smooth and minimal */
+        .sidebar::-webkit-scrollbar,
+        .main::-webkit-scrollbar,
+        .insights-panel::-webkit-scrollbar,
+        .modal::-webkit-scrollbar,
+        .task-list::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track,
+        .main::-webkit-scrollbar-track,
+        .insights-panel::-webkit-scrollbar-track,
+        .modal::-webkit-scrollbar-track,
+        .task-list::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb,
+        .main::-webkit-scrollbar-thumb,
+        .insights-panel::-webkit-scrollbar-thumb,
+        .modal::-webkit-scrollbar-thumb,
+        .task-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .main::-webkit-scrollbar-thumb:hover,
+        .insights-panel::-webkit-scrollbar-thumb:hover,
+        .modal::-webkit-scrollbar-thumb:hover,
+        .task-list::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-green);
+        }
+
+        /* Firefox scrollbar */
+        .sidebar,
+        .main,
+        .insights-panel,
+        .modal,
+        .task-list {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
         }
 
         .logo {
@@ -140,7 +211,9 @@
         .main {
             padding: 32px 40px;
             overflow-y: auto;
-            max-height: 100vh;
+            overflow-x: hidden;
+            height: 100vh;
+            width: 100%;
         }
 
         .header {
@@ -207,6 +280,8 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
             margin-bottom: 32px;
+            width: 100%;
+            overflow: hidden;
         }
 
         .stat-card {
@@ -256,6 +331,7 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             overflow: hidden;
+            margin-bottom: 32px;
         }
 
         .section-header {
@@ -292,6 +368,8 @@
 
         .task-list {
             padding: 8px;
+            overflow-x: hidden;
+            overflow-y: visible;
         }
 
         .task-item {
@@ -338,16 +416,30 @@
 
         .task-content {
             min-width: 0;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .task-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .task-title {
             font-weight: 500;
             margin-bottom: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .task-item.completed .task-title {
             text-decoration: line-through;
             opacity: 0.6;
+            color: var(--text-muted);
+        }
+
+        .task-item.completed {
+            background: rgba(34, 197, 94, 0.05);
         }
 
         .task-meta {
@@ -355,6 +447,7 @@
             gap: 12px;
             font-size: 12px;
             color: var(--text-muted);
+            flex-wrap: wrap;
         }
 
         .task-badge {
@@ -458,7 +551,8 @@
             border-left: 1px solid var(--border);
             padding: 24px;
             overflow-y: auto;
-            max-height: 100vh;
+            overflow-x: hidden;
+            height: 100vh;
         }
 
         .panel-title {
@@ -532,10 +626,11 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 16px;
-            width: 100%;
+            width: 90%;
             max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .modal-header {
@@ -1139,20 +1234,221 @@
             color: var(--text-secondary);
         }
 
-        /* Smooth transitions for all interactive elements */
-        button, .task-item, .stat-card, .summary-card, .insight-card {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        /* WORLD-CLASS SMOOTH TRANSITIONS */
+        button, .task-item, .stat-card, .summary-card, .insight-card, 
+        .achievement-badge, .challenge-card, .cognitive-btn, .complexity-btn {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* Hover effects */
+        /* Enhanced hover effects with smooth transforms */
+        .task-item {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .task-item:hover {
-            transform: translateX(4px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transform: translateX(4px) scale(1.01);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+        }
+
+        .stat-card {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .stat-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .summary-card {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .summary-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Smooth button interactions */
+        button {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Smooth checkbox animation */
+        .task-checkbox {
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .task-checkbox:active {
+            transform: scale(0.9);
+        }
+
+        .task-checkbox.completed {
+            animation: checkboxPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes checkboxPop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2) rotate(5deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        /* Smooth modal animations */
+        .modal-overlay {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal {
+            animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Smooth stat value changes */
+        .stat-value, .summary-value, .score-value {
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Smooth XP bar animation */
+        .xp-progress {
+            transition: width 1s cubic-bezier(0.65, 0, 0.35, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .xp-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        /* Smooth task list stagger */
+        .task-list {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* Add subtle parallax effect to cards */
+        .stat-card, .summary-card {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        /* Smooth date navigation */
+        .date-nav button {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .date-nav button:hover {
+            transform: scale(1.1);
+            background: var(--bg-elevated);
+        }
+
+        .date-nav button:active {
+            transform: scale(0.95);
+        }
+
+        /* Smooth add task button */
+        .add-task-btn {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .add-task-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .add-task-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Smooth insight cards */
+        .insight-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .insight-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Smooth level badge pulse */
+        .level-badge {
+            animation: gentlePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes gentlePulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+            }
+            50% {
+                transform: scale(1.03);
+                box-shadow: 0 6px 16px rgba(168, 85, 247, 0.5);
+            }
+        }
+
+        /* Smooth productivity score rotation */
+        .score-circle {
+            transition: all 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        /* Add smooth focus states */
+        .form-input:focus,
+        .form-select:focus {
+            transform: scale(1.01);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
         }
 
         /* Loading shimmer effect */
@@ -1165,6 +1461,46 @@
             );
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
+        }
+
+        /* Smooth page transitions */
+        .sidebar,
+        .main,
+        .insights-panel {
+            animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .sidebar {
+            animation-delay: 0s;
+        }
+
+        .main {
+            animation-delay: 0.1s;
+        }
+
+        .insights-panel {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Smooth empty state */
+        .empty-state {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Loading spinner enhancement */
+        .spinner {
+            animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
         }
 
         /* Responsive */
@@ -1181,6 +1517,21 @@
             
             .sidebar, .insights-panel {
                 display: none;
+            }
+            
+            .main {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .daily-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 16px;
             }
         }
     </style>
