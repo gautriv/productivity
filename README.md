@@ -1,4 +1,4 @@
-# Productivity Tracker - World-Class Edition
+# Productivity Tracker
 
 A sophisticated, gamified productivity tracking system with advanced analytics, predictive algorithms, and motivational features.
 
@@ -330,7 +330,14 @@ Potential additions (not yet implemented):
 
 ## License
 
-This project is provided as-is for personal productivity tracking.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### MIT License Summary
+- ✅ Commercial use
+- ✅ Modification
+- ✅ Distribution
+- ✅ Private use
+- ⚠️ Liability and warranty disclaimer
 
 ## Support
 
@@ -342,7 +349,28 @@ For issues or questions:
 
 ## Credits
 
-Built with modern web technologies and productivity science principles.
+### Author
+Built with dedication and attention to detail by passionate developers who believe in the power of productivity and self-improvement.
 
-Version: 2.0.0 (World-Class Edition)
-Last Updated: November 2025
+### Inspiration
+This project combines principles from:
+- **Productivity Science** - Evidence-based task management methodologies
+- **Gamification Theory** - Motivation through achievement systems
+- **Behavioral Psychology** - Habit formation and streak mechanics
+- **Data Science** - Predictive analytics and pattern recognition
+
+### Technologies & Libraries
+- **Flask** - Web framework by Pallets
+- **React** - UI library by Meta
+- **Chart.js** - Data visualization
+- **SQLite** - Database engine
+- **Flask-CORS** - CORS handling
+
+### Version Information
+- **Version**: 2.0.0
+- **Release Date**: November 2025
+- **Status**: Active Development
+
+---
+
+**Built with ❤️ for high performers who want to track, analyze, and optimize their productivity journey.**
