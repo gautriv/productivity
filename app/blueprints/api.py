@@ -132,14 +132,7 @@ def get_daily_tasks(date_str):
         FROM daily_tasks dt
         JOIN tasks t ON dt.task_id = t.id
         WHERE dt.scheduled_date = ?
-        ORDER BY 
-            CASE dt.status 
-                WHEN 'in_progress' THEN 1 
-                WHEN 'pending' THEN 2 
-                WHEN 'completed' THEN 3 
-                WHEN 'abandoned' THEN 4 
-            END,
-            t.complexity DESC
+        ORDER BY dt.display_order ASC, dt.id ASC
     ''', (date_str,))
     
     tasks = [dict(row) for row in cursor.fetchall()]
@@ -201,12 +194,20 @@ def quick_add_task(date_str):
     ))
     
     task_id = cursor.lastrowid
-    
+
+    # Get the max display_order for this date
+    cursor.execute('''
+        SELECT COALESCE(MAX(display_order), -1) + 1 as next_order
+        FROM daily_tasks
+        WHERE scheduled_date = ?
+    ''', (date_str,))
+    next_order = cursor.fetchone()[0]
+
     # Add to daily tasks
     cursor.execute('''
-        INSERT INTO daily_tasks (task_id, scheduled_date)
-        VALUES (?, ?)
-    ''', (task_id, date_str))
+        INSERT INTO daily_tasks (task_id, scheduled_date, display_order)
+        VALUES (?, ?, ?)
+    ''', (task_id, date_str, next_order))
     
     db.commit()
     
@@ -310,4 +311,34 @@ def process_rollover():
         'rolled_over_count': len(rolled_over),
         'tasks': rolled_over
     })
+
+# ----- Task Reordering -----
+
+@api_bp.route('/daily/<date_str>/reorder', methods=['PUT'])
+@handle_errors
+def reorder_tasks(date_str):
+    """Reorder tasks for a specific day"""
+    data = request.json
+    task_orders = data.get('task_orders', [])
+
+    if not task_orders:
+        return jsonify({'error': 'No task orders provided'}), 400
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # Update display_order for each task
+    for item in task_orders:
+        task_id = item['id']
+        new_order = item['order']
+
+        cursor.execute('''
+            UPDATE daily_tasks
+            SET display_order = ?
+            WHERE id = ? AND scheduled_date = ?
+        ''', (new_order, task_id, date_str))
+
+    db.commit()
+
+    return jsonify({'success': True, 'updated_count': len(task_orders)})
 

@@ -155,26 +155,33 @@
             );
         }
 
-        function TaskItem({ task, onStatusChange, onDelete, index }) {
+        function TaskItem({ task, onStatusChange, onDelete, index, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop }) {
             const handleCheck = () => {
                 const newStatus = task.status === 'completed' ? 'pending' : 'completed';
                 onStatusChange(task.id, newStatus);
             };
 
-            const netPoints = task.status === 'completed' 
-                ? task.points - task.penalty_points 
+            const netPoints = task.status === 'completed'
+                ? task.points - task.penalty_points
                 : -task.penalty_points;
 
             return (
-                <div 
+                <div
                     className={`task-item ${task.status} animate-fade-in`}
                     style={{ animationDelay: `${index * 0.05}s` }}
+                    draggable="true"
+                    onDragStart={(e) => onDragStart(e, task, index)}
+                    onDragEnd={onDragEnd}
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
+                    onDrop={(e) => onDrop(e, task, index)}
+                    data-task-id={task.id}
                 >
-                    <div 
+                    <div
                         className={`task-checkbox ${task.status === 'completed' ? 'completed' : ''}`}
                         onClick={handleCheck}
                     />
-                    
+
                     <div className="task-content">
                         <div className="task-title">{task.title}</div>
                         <div className="task-meta">
@@ -1247,7 +1254,7 @@
             const [trends, setTrends] = useState([]);
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [loading, setLoading] = useState(true);
-            
+
             // Time entry modal state
             const [timeEntryModal, setTimeEntryModal] = useState({
                 isOpen: false,
@@ -1255,7 +1262,7 @@
                 taskTitle: '',
                 estimatedTime: 0
             });
-            
+
             // New state for gamification
             const [userStats, setUserStats] = useState({
                 level: 1,
@@ -1278,6 +1285,10 @@
             const [patterns, setPatterns] = useState(null);
             const [cognitiveBalance, setCognitiveBalance] = useState(null);
             const [burnoutAnalysis, setBurnoutAnalysis] = useState(null);
+
+            // Drag and drop state
+            const [draggedItem, setDraggedItem] = useState(null);
+            const [draggedOverIndex, setDraggedOverIndex] = useState(null);
 
             const dateStr = formatDate(selectedDate);
 
@@ -1446,18 +1457,102 @@
             const handleRollover = async () => {
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
-                
+
                 const result = await api.post('/api/rollover', {
                     from_date: formatDate(yesterday),
                     to_date: formatDate(new Date())
                 });
-                
+
                 if (result.rolled_over_count > 0) {
                     alert(`Rolled over ${result.rolled_over_count} tasks with penalties applied.`);
                 } else {
                     alert('No tasks to roll over.');
                 }
                 loadData();
+            };
+
+            // Drag and drop handlers
+            const handleDragStart = (e, task, index) => {
+                setDraggedItem({ task, index });
+                e.dataTransfer.effectAllowed = 'move';
+                e.currentTarget.classList.add('is-dragging');
+
+                // Set drag image
+                e.dataTransfer.setData('text/html', e.currentTarget);
+            };
+
+            const handleDragEnd = (e) => {
+                e.currentTarget.classList.remove('is-dragging');
+
+                // Remove drag-over class from all items
+                document.querySelectorAll('.task-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+
+                setDraggedItem(null);
+                setDraggedOverIndex(null);
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+
+                // Add visual feedback
+                const taskItem = e.currentTarget;
+                if (draggedItem && !taskItem.classList.contains('is-dragging')) {
+                    taskItem.classList.add('drag-over');
+                }
+            };
+
+            const handleDragLeave = (e) => {
+                e.currentTarget.classList.remove('drag-over');
+            };
+
+            const handleDrop = async (e, targetTask, targetIndex) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove('drag-over');
+
+                if (!draggedItem || draggedItem.index === targetIndex) {
+                    return;
+                }
+
+                const sourceIndex = draggedItem.index;
+                const newTasks = [...tasks];
+
+                // Remove from source position
+                const [movedTask] = newTasks.splice(sourceIndex, 1);
+
+                // Insert at target position
+                newTasks.splice(targetIndex, 0, movedTask);
+
+                // Update local state immediately for smooth UX
+                setTasks(newTasks);
+
+                // Add success animation
+                setTimeout(() => {
+                    const reorderedItem = document.querySelector(`[data-task-id="${movedTask.id}"]`);
+                    if (reorderedItem) {
+                        reorderedItem.classList.add('reorder-success');
+                        setTimeout(() => {
+                            reorderedItem.classList.remove('reorder-success');
+                        }, 600);
+                    }
+                }, 100);
+
+                // Prepare task orders for backend
+                const taskOrders = newTasks.map((task, idx) => ({
+                    id: task.id,
+                    order: idx
+                }));
+
+                try {
+                    // Send to backend
+                    await api.put(`/api/daily/${dateStr}/reorder`, { task_orders: taskOrders });
+                } catch (error) {
+                    console.error('Error reordering tasks:', error);
+                    // Reload to get correct order if save failed
+                    loadData();
+                }
             };
 
             const isToday = dateStr === formatDate(new Date());
@@ -1545,6 +1640,11 @@
                                             index={index}
                                             onStatusChange={handleStatusChange}
                                             onDelete={handleDeleteTask}
+                                            onDragStart={handleDragStart}
+                                            onDragEnd={handleDragEnd}
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
                                         />
                                     ))
                                 )}

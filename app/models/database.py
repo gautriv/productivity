@@ -51,6 +51,7 @@ def init_db():
             actual_time INTEGER,
             completed_at TIMESTAMP,
             notes TEXT,
+            display_order INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (task_id) REFERENCES tasks(id),
             UNIQUE(task_id, scheduled_date)
@@ -142,4 +143,45 @@ def calculate_task_points(task):
 def calculate_penalty(rolled_over_count):
     """Calculate cumulative penalty for rolled over tasks"""
     return rolled_over_count * 2
+
+def migrate_add_display_order():
+    """Add display_order column to existing daily_tasks if it doesn't exist"""
+    db = get_db()
+    cursor = db.cursor()
+
+    # Check if column exists
+    cursor.execute("PRAGMA table_info(daily_tasks)")
+    columns = [column[1] for column in cursor.fetchall()]
+
+    if 'display_order' not in columns:
+        print("Adding display_order column to daily_tasks...")
+        cursor.execute('ALTER TABLE daily_tasks ADD COLUMN display_order INTEGER DEFAULT 0')
+
+        # Set initial display_order for existing tasks based on current order
+        cursor.execute('''
+            SELECT id, scheduled_date
+            FROM daily_tasks
+            ORDER BY scheduled_date,
+                CASE status
+                    WHEN 'in_progress' THEN 1
+                    WHEN 'pending' THEN 2
+                    WHEN 'completed' THEN 3
+                    WHEN 'abandoned' THEN 4
+                END, id
+        ''')
+
+        tasks = cursor.fetchall()
+        current_date = None
+        order = 0
+
+        for task in tasks:
+            if task[1] != current_date:
+                current_date = task[1]
+                order = 0
+
+            cursor.execute('UPDATE daily_tasks SET display_order = ? WHERE id = ?', (order, task[0]))
+            order += 1
+
+        db.commit()
+        print("Migration completed successfully!")
 
