@@ -350,18 +350,31 @@
             const [complexity, setComplexity] = useState(3);
             const [cognitiveLoad, setCognitiveLoad] = useState('active_work');
             const [timeEstimate, setTimeEstimate] = useState(30);
+            const [useCustomTime, setUseCustomTime] = useState(false);
+            const [customHours, setCustomHours] = useState(0);
+            const [customMinutes, setCustomMinutes] = useState(30);
 
             const timeOptions = [15, 30, 60, 120, 240, 480];
 
             const handleSubmit = () => {
                 if (!title.trim()) return;
-                
+
+                // Calculate final time estimate
+                const finalTimeEstimate = useCustomTime
+                    ? (customHours * 60) + customMinutes
+                    : timeEstimate;
+
+                if (finalTimeEstimate === 0) {
+                    alert('Please enter a valid time estimate (at least 1 minute)');
+                    return;
+                }
+
                 onAdd({
                     title: title.trim(),
                     description,
                     complexity,
                     cognitive_load: cognitiveLoad,
-                    time_estimate: timeEstimate
+                    time_estimate: finalTimeEstimate
                 });
 
                 // Reset form
@@ -370,6 +383,9 @@
                 setComplexity(3);
                 setCognitiveLoad('active_work');
                 setTimeEstimate(30);
+                setUseCustomTime(false);
+                setCustomHours(0);
+                setCustomMinutes(30);
             };
 
             if (!isOpen) return null;
@@ -440,17 +456,119 @@
 
                             <div className="form-group">
                                 <label className="form-label">Time Estimate</label>
-                                <div className="time-selector">
-                                    {timeOptions.map(mins => (
-                                        <button
-                                            key={mins}
-                                            className={`time-btn ${timeEstimate === mins ? 'selected' : ''}`}
-                                            onClick={() => setTimeEstimate(mins)}
-                                        >
-                                            {formatTime(mins)}
-                                        </button>
-                                    ))}
+
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '8px',
+                                    alignItems: 'center',
+                                    marginBottom: '12px',
+                                    padding: '8px',
+                                    background: 'var(--bg-elevated)',
+                                    borderRadius: '8px'
+                                }}>
+                                    <button
+                                        className={`time-mode-btn ${!useCustomTime ? 'active' : ''}`}
+                                        onClick={() => setUseCustomTime(false)}
+                                        style={{
+                                            flex: 1,
+                                            padding: '8px 16px',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            background: !useCustomTime ? 'var(--accent-blue)' : 'transparent',
+                                            color: !useCustomTime ? 'white' : 'var(--text-secondary)',
+                                            fontSize: '13px',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        Preset
+                                    </button>
+                                    <button
+                                        className={`time-mode-btn ${useCustomTime ? 'active' : ''}`}
+                                        onClick={() => setUseCustomTime(true)}
+                                        style={{
+                                            flex: 1,
+                                            padding: '8px 16px',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            background: useCustomTime ? 'var(--accent-blue)' : 'transparent',
+                                            color: useCustomTime ? 'white' : 'var(--text-secondary)',
+                                            fontSize: '13px',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        Custom
+                                    </button>
                                 </div>
+
+                                {!useCustomTime ? (
+                                    <div className="time-selector">
+                                        {timeOptions.map(mins => (
+                                            <button
+                                                key={mins}
+                                                className={`time-btn ${timeEstimate === mins ? 'selected' : ''}`}
+                                                onClick={() => setTimeEstimate(mins)}
+                                            >
+                                                {formatTime(mins)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '1fr 1fr',
+                                            gap: '12px',
+                                            marginBottom: '12px'
+                                        }}>
+                                            <div style={{ margin: 0 }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '6px' }}>Hours</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-input"
+                                                    min="0"
+                                                    max="24"
+                                                    value={customHours}
+                                                    onChange={e => setCustomHours(Math.max(0, parseInt(e.target.value) || 0))}
+                                                    style={{ textAlign: 'center', fontSize: '16px', padding: '10px' }}
+                                                />
+                                            </div>
+                                            <div style={{ margin: 0 }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '6px' }}>Minutes</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-input"
+                                                    min="0"
+                                                    max="59"
+                                                    value={customMinutes}
+                                                    onChange={e => setCustomMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                                                    style={{ textAlign: 'center', fontSize: '16px', padding: '10px' }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            background: 'var(--bg-tertiary)',
+                                            padding: '10px',
+                                            borderRadius: '6px',
+                                            textAlign: 'center'
+                                        }}>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                                                Total Estimate
+                                            </div>
+                                            <div style={{
+                                                fontSize: '18px',
+                                                fontWeight: '700',
+                                                fontFamily: 'JetBrains Mono, monospace',
+                                                color: 'var(--accent-green)'
+                                            }}>
+                                                {customHours}h {customMinutes}m
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
