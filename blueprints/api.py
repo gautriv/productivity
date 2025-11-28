@@ -4,8 +4,8 @@ Task management endpoints - maintains all existing features
 """
 from flask import Blueprint, jsonify, request
 from datetime import datetime, date, timedelta
-from app.models.database import get_db, calculate_task_points, calculate_penalty
-from app.utils.helpers import handle_errors, validate_task_data
+from models.database import get_db, calculate_task_points, calculate_penalty
+from utils.helpers import handle_errors, validate_task_data
 
 api_bp = Blueprint('api', __name__)
 
@@ -129,9 +129,11 @@ def get_daily_tasks(date_str):
     cursor.execute('''
         SELECT dt.*, t.title, t.description, t.complexity, t.cognitive_load, t.time_estimate,
                t.parent_id,
-               (SELECT COUNT(*) FROM tasks st WHERE st.parent_id = t.id) as subtask_count,
-               (SELECT dt2.id FROM daily_tasks dt2 
-                JOIN tasks t2 ON dt2.task_id = t2.id 
+               (SELECT COUNT(*) FROM tasks st
+                JOIN daily_tasks dt_sub ON st.id = dt_sub.task_id
+                WHERE st.parent_id = t.id AND dt_sub.scheduled_date = dt.scheduled_date) as subtask_count,
+               (SELECT dt2.id FROM daily_tasks dt2
+                JOIN tasks t2 ON dt2.task_id = t2.id
                 WHERE t2.id = t.parent_id AND dt2.scheduled_date = dt.scheduled_date) as parent_daily_task_id
         FROM daily_tasks dt
         JOIN tasks t ON dt.task_id = t.id

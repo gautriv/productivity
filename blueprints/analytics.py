@@ -4,9 +4,9 @@ Advanced analytics endpoints with world-class algorithms
 """
 from flask import Blueprint, jsonify, request
 from datetime import datetime, date, timedelta
-from app.models.database import get_db, calculate_task_points
-from app.services.analytics import ProductivityAnalytics
-from app.utils.helpers import handle_errors
+from models.database import get_db, calculate_task_points
+from services.analytics import ProductivityAnalytics
+from utils.helpers import handle_errors
 
 analytics_bp = Blueprint('analytics', __name__)
 

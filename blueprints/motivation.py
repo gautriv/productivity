@@ -4,9 +4,9 @@ Gamification and motivation endpoints
 """
 from flask import Blueprint, jsonify, request
 from datetime import date
-from app.models.database import get_db
-from app.services.motivation import MotivationEngine
-from app.utils.helpers import handle_errors
+from models.database import get_db
+from services.motivation import MotivationEngine
+from utils.helpers import handle_errors
 
 motivation_bp = Blueprint('motivation', __name__)
 

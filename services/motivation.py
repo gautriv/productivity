@@ -3,7 +3,7 @@ Motivation & Gamification Service
 World-class motivation system to keep users engaged
 """
 from datetime import datetime, date, timedelta
-from app.models.database import get_db
+from models.database import get_db
 import random
 
 class MotivationEngine:

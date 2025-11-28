@@ -3,7 +3,7 @@ Advanced Analytics Service
 World-class algorithms for productivity insights
 """
 from datetime import datetime, date, timedelta
-from app.models.database import get_db, calculate_task_points
+from models.database import get_db, calculate_task_points
 import math
 from collections import defaultdict
 
