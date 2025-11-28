@@ -318,7 +318,7 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border);
             border-radius: 16px;
-            overflow: hidden;
+            overflow: visible;
             margin-bottom: 32px;
         }
 
@@ -333,6 +333,27 @@
         .section-title {
             font-size: 16px;
             font-weight: 600;
+        }
+
+        .section-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .drag-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: help;
+            transition: all 0.2s ease;
+        }
+
+        .drag-hint:hover {
+            color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
         }
 
         .add-task-btn {
@@ -356,8 +377,7 @@
 
         .task-list {
             padding: 8px;
-            overflow-x: hidden;
-            overflow-y: visible;
+            overflow: visible;
         }
 
         .task-item {
@@ -369,10 +389,15 @@
             border-radius: 10px;
             transition: all 0.15s ease;
             cursor: pointer;
+            position: relative;
+            overflow: visible;
+            z-index: 1;
         }
 
-        .task-item:hover {
+        .task-item:hover,
+        .task-item:has(.menu-open) {
             background: var(--bg-tertiary);
+            z-index: 100;
         }
 
         .task-checkbox {
@@ -485,10 +510,16 @@
             gap: 8px;
             opacity: 0;
             transition: opacity 0.15s ease;
+            position: relative;
+            overflow: visible;
+            z-index: 1;
         }
 
-        .task-item:hover .task-actions {
+        .task-item:hover .task-actions,
+        .task-item .task-actions:focus-within,
+        .task-item .task-actions.menu-open {
             opacity: 1;
+            z-index: 9999;
         }
 
         .task-action-btn {
@@ -511,6 +542,195 @@
         .task-action-btn.delete:hover {
             color: var(--accent-red);
             border-color: var(--accent-red);
+        }
+
+        .task-action-btn.promote {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .task-action-btn.promote:hover {
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .task-action-btn.demote {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .task-action-btn.demote:hover {
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .task-action-btn.demote:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Subtask Styles */
+        .task-item.is-subtask {
+            margin-left: 32px;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+            border-left: 3px solid var(--accent-blue);
+            position: relative;
+        }
+
+        .task-item.is-subtask::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 50%;
+            width: 28px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--border), var(--accent-blue));
+        }
+
+        .subtask-indicator {
+            display: none;
+        }
+
+        .subtask-icon {
+            color: var(--accent-blue);
+            margin-right: 6px;
+            font-size: 14px;
+        }
+
+        .subtask-count-badge {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Parent Selection Dropdown */
+        .subtask-dropdown {
+            position: static;
+        }
+
+        .parent-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            min-width: 220px;
+            max-width: 320px;
+            max-height: 280px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 99999;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.05);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .parent-menu-header {
+            padding: 10px 14px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+
+        .parent-menu-item {
+            display: block;
+            width: 100%;
+            padding: 10px 14px;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .parent-menu-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--accent-blue);
+        }
+
+        .parent-menu-item.cancel {
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .parent-menu-item.cancel:hover {
+            color: var(--text-primary);
+        }
+
+        /* Task Type Selector in Modal */
+        .task-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .task-type-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-type-btn:hover {
+            border-color: var(--border-focus);
+            color: var(--text-primary);
+        }
+
+        .task-type-btn.selected {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .task-type-icon {
+            font-size: 16px;
+        }
+
+        .parent-selector select {
+            width: 100%;
+        }
+
+        /* Drag to make subtask styles */
+        .task-item.drag-as-subtask {
+            border: 2px dashed var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .task-item.drag-as-subtask::after {
+            content: 'Drop to make subtask';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent-blue);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+            pointer-events: none;
         }
 
         .penalty-badge {

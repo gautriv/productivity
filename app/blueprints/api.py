@@ -128,7 +128,11 @@ def get_daily_tasks(date_str):
     
     cursor.execute('''
         SELECT dt.*, t.title, t.description, t.complexity, t.cognitive_load, t.time_estimate,
-               (SELECT COUNT(*) FROM tasks st WHERE st.parent_id = t.id) as subtask_count
+               t.parent_id,
+               (SELECT COUNT(*) FROM tasks st WHERE st.parent_id = t.id) as subtask_count,
+               (SELECT dt2.id FROM daily_tasks dt2 
+                JOIN tasks t2 ON dt2.task_id = t2.id 
+                WHERE t2.id = t.parent_id AND dt2.scheduled_date = dt.scheduled_date) as parent_daily_task_id
         FROM daily_tasks dt
         JOIN tasks t ON dt.task_id = t.id
         WHERE dt.scheduled_date = ?
@@ -141,6 +145,7 @@ def get_daily_tasks(date_str):
     for task in tasks:
         task['points'] = calculate_task_points(task)
         task['net_points'] = task['points'] - task['penalty_points'] if task['status'] == 'completed' else -task['penalty_points']
+        task['is_subtask'] = task['parent_id'] is not None
     
     return jsonify(tasks)
 
@@ -251,6 +256,18 @@ def remove_daily_task(daily_task_id):
     """Remove a task from a day (doesn't delete the task itself)"""
     db = get_db()
     cursor = db.cursor()
+    
+    # Get the task_id before deleting
+    cursor.execute('SELECT task_id FROM daily_tasks WHERE id = ?', (daily_task_id,))
+    daily_task = cursor.fetchone()
+    
+    if daily_task:
+        task_id = daily_task['task_id']
+        
+        # Convert any subtasks of this task to main tasks
+        cursor.execute('UPDATE tasks SET parent_id = NULL WHERE parent_id = ?', (task_id,))
+    
+    # Delete the daily task
     cursor.execute('DELETE FROM daily_tasks WHERE id = ?', (daily_task_id,))
     db.commit()
     return jsonify({'success': True})
@@ -341,4 +358,60 @@ def reorder_tasks(date_str):
     db.commit()
 
     return jsonify({'success': True, 'updated_count': len(task_orders)})
+
+# ----- Task Hierarchy (Subtask Conversion) -----
+
+@api_bp.route('/daily/task/<int:daily_task_id>/set-parent', methods=['PUT'])
+@handle_errors
+def set_task_parent(daily_task_id):
+    """Set or remove parent for a daily task"""
+    data = request.json
+    parent_daily_task_id = data.get('parent_daily_task_id')
+    
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Get the actual task_id for this daily task
+    cursor.execute('SELECT task_id FROM daily_tasks WHERE id = ?', (daily_task_id,))
+    daily_task = cursor.fetchone()
+    if not daily_task:
+        return jsonify({'error': 'Daily task not found'}), 404
+    
+    task_id = daily_task['task_id']
+    
+    if parent_daily_task_id is None:
+        # Remove parent - convert to main task
+        cursor.execute('UPDATE tasks SET parent_id = NULL WHERE id = ?', (task_id,))
+        db.commit()
+        return jsonify({'success': True, 'task_id': task_id, 'parent_id': None})
+    
+    # Get the actual task_id for the parent daily task
+    cursor.execute('SELECT task_id FROM daily_tasks WHERE id = ?', (parent_daily_task_id,))
+    parent_daily_task = cursor.fetchone()
+    if not parent_daily_task:
+        return jsonify({'error': 'Parent daily task not found'}), 404
+    
+    parent_task_id = parent_daily_task['task_id']
+    
+    # Prevent circular reference
+    if parent_task_id == task_id:
+        return jsonify({'error': 'A task cannot be its own parent'}), 400
+    
+    # Verify parent is not itself a subtask (only allow 1 level of nesting)
+    cursor.execute('SELECT parent_id FROM tasks WHERE id = ?', (parent_task_id,))
+    parent_task = cursor.fetchone()
+    if parent_task and parent_task['parent_id'] is not None:
+        return jsonify({'error': 'Cannot nest subtasks more than one level deep'}), 400
+    
+    # Check if the task being converted has subtasks
+    cursor.execute('SELECT COUNT(*) as count FROM tasks WHERE parent_id = ?', (task_id,))
+    subtask_count = cursor.fetchone()['count']
+    if subtask_count > 0:
+        return jsonify({'error': 'Cannot make a task with subtasks into a subtask'}), 400
+    
+    # Update the task to be a subtask
+    cursor.execute('UPDATE tasks SET parent_id = ? WHERE id = ?', (parent_task_id, task_id))
+    db.commit()
+    
+    return jsonify({'success': True, 'task_id': task_id, 'parent_id': parent_task_id})
 
