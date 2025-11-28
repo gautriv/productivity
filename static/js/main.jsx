@@ -1608,6 +1608,11 @@
                         estimatedTime: 0
                     });
 
+                    // Trigger confetti celebration!
+                    if (window.createConfetti) {
+                        window.createConfetti(window.innerWidth / 2, window.innerHeight / 2);
+                    }
+
                     // Reload data
                     await loadData();
                 } catch (error) {
