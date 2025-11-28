@@ -66,29 +66,94 @@
                         <span className="logo-text">Productivity</span>
                     </div>
 
-                    <div className="summary-card animate-fade-in">
-                        <div className="summary-label">Level & XP</div>
-                        <div className="level-badge">
-                            ⭐ Level {userStats.level}
+                    <div className="summary-card level-card animate-fade-in">
+                        <div className="summary-label">Level & Rank</div>
+                        <div className="level-header">
+                            <div className="level-badge" style={{ 
+                                background: userStats.rank_color ? 
+                                    `linear-gradient(135deg, ${userStats.rank_color}40, ${userStats.rank_color}20)` : 
+                                    'linear-gradient(135deg, var(--accent-purple), var(--accent-blue))'
+                            }}>
+                                <span className="rank-icon">{userStats.rank_icon || '⭐'}</span>
+                                <span>Level {userStats.level}</span>
+                            </div>
+                        </div>
+                        <div className="rank-title" style={{ 
+                            color: userStats.rank_color || 'var(--accent-purple)',
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            marginTop: '8px',
+                            marginBottom: '4px'
+                        }}>
+                            {userStats.rank || 'Novice'}
+                        </div>
+                        <div className="tier-badge" style={{
+                            fontSize: '10px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            color: 'var(--text-muted)',
+                            marginBottom: '12px'
+                        }}>
+                            {userStats.tier || 'beginner'} tier
                         </div>
                         <div className="xp-bar">
                             <div 
                                 className="xp-progress" 
-                                style={{ width: `${userStats.xp_percentage}%` }}
+                                style={{ width: `${userStats.xp_percentage || 0}%` }}
                             />
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
-                            {userStats.current_xp} / {userStats.xp_needed} XP
+                        <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            fontSize: '11px', 
+                            color: 'var(--text-muted)', 
+                            marginTop: '6px' 
+                        }}>
+                            <span>{userStats.current_xp || 0} XP</span>
+                            <span>{userStats.xp_needed || 50} XP needed</span>
                         </div>
+                        {userStats.streak_multiplier > 1 && (
+                            <div className="streak-multiplier" style={{
+                                marginTop: '10px',
+                                padding: '6px 10px',
+                                background: 'rgba(34, 197, 94, 0.15)',
+                                borderRadius: '8px',
+                                fontSize: '11px',
+                                color: 'var(--accent-green)',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                            }}>
+                                <span>🔥</span>
+                                <span>+{userStats.streak_bonus_percentage || 0}% XP Streak Bonus!</span>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="summary-card animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                        <div className="summary-label">Net Points (30d)</div>
+                    <div className="summary-card points-card animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                        <div className="summary-label">
+                            <span>Net Points</span>
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>(30d)</span>
+                        </div>
                         <div className={`summary-value ${summary.net_points >= 0 ? 'positive' : 'negative'}`}>
                             {summary.net_points >= 0 ? '+' : ''}{summary.net_points}
                         </div>
+                        <div className="points-breakdown">
+                            <div className="point-stat">
+                                <span style={{ color: 'var(--accent-green)' }}>+{summary.points_earned || 0}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>earned</span>
+                            </div>
+                            <div className="point-stat">
+                                <span style={{ color: 'var(--accent-red)' }}>-{summary.penalties || 0}</span>
+                                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>penalties</span>
+                            </div>
+                        </div>
                         <div className={`streak-badge ${summary.current_streak > 0 ? 'active' : ''}`}>
                             🔥 {summary.current_streak} day streak
+                            {summary.current_streak >= 3 && (
+                                <span className="streak-multiplier">+{Math.min(50, summary.current_streak * 5)}% bonus</span>
+                            )}
                         </div>
                     </div>
 
@@ -112,13 +177,33 @@
                         </div>
                     </div>
 
-                    <div className="summary-card animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                    <div className="summary-card achievements-card animate-fade-in" style={{ animationDelay: '0.3s' }}>
                         <div className="summary-label">Achievements</div>
-                        <div className="summary-value neutral">
-                            {userStats.achievements_unlocked}/{userStats.total_achievements}
+                        <div className="achievement-progress-header">
+                            <div className="summary-value neutral">
+                                {userStats.achievements_unlocked || 0}/{userStats.total_achievements || 45}
+                            </div>
+                            <div className="achievement-tier-badges">
+                                <span className="tier-badge diamond" title="Diamond">💎</span>
+                                <span className="tier-badge platinum" title="Platinum">💠</span>
+                                <span className="tier-badge gold" title="Gold">🥇</span>
+                            </div>
                         </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                            {userStats.total_completed} tasks completed
+                        <div className="achievement-progress-bar">
+                            <div 
+                                className="achievement-progress-fill" 
+                                style={{ 
+                                    width: `${((userStats.achievements_unlocked || 0) / (userStats.total_achievements || 45)) * 100}%` 
+                                }}
+                            />
+                        </div>
+                        <div className="achievement-points-display">
+                            <span style={{ fontSize: '11px', color: 'var(--accent-yellow)' }}>
+                                🏆 {userStats.achievement_points || 0} AP
+                            </span>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                {userStats.total_completed || 0} tasks done
+                            </span>
                         </div>
                     </div>
 
@@ -703,46 +788,142 @@
                         )}
 
                         {dailyChallenge && (
-                            <div className="challenge-card animate-scale">
-                                <div className="challenge-title">
-                                    🎯 Daily Challenge
+                            <div className={`challenge-card animate-scale ${dailyChallenge.completed ? 'completed' : ''}`}>
+                                <div className="challenge-header">
+                                    <div className="challenge-title">
+                                        <span className="challenge-icon">{dailyChallenge.icon || '🎯'}</span>
+                                        <span>{dailyChallenge.title || 'Daily Challenge'}</span>
+                                    </div>
+                                    <div className={`challenge-difficulty ${dailyChallenge.difficulty || 'medium'}`}>
+                                        {dailyChallenge.difficulty || 'medium'}
+                                    </div>
                                 </div>
                                 <div className="challenge-description">
-                                    {dailyChallenge.challenge}
+                                    {dailyChallenge.description || dailyChallenge.challenge}
                                 </div>
-                                <div className="challenge-reward">
-                                    +{dailyChallenge.bonus_points} bonus points
+                                <div className="challenge-footer">
+                                    <div className="challenge-reward">
+                                        <span className="reward-icon">💎</span>
+                                        <span>+{dailyChallenge.bonus_points} bonus</span>
+                                    </div>
+                                    {dailyChallenge.completed ? (
+                                        <div className="challenge-status completed">
+                                            <span>✅</span>
+                                            <span>Completed!</span>
+                                        </div>
+                                    ) : (
+                                        <div className="challenge-status pending">
+                                            <span>🎯</span>
+                                            <span>In Progress</span>
+                                        </div>
+                                    )}
                                 </div>
+                                {dailyChallenge.category && (
+                                    <div className="challenge-category">
+                                        {dailyChallenge.category.replace('_', ' ')}
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         <div className="panel-title">🏆 Achievements</div>
-                        <div style={{ marginBottom: '20px' }}>
-                            {achievements.slice(0, 4).map((achievement, i) => (
-                                <div 
-                                    key={achievement.id} 
-                                    className={`achievement-badge ${achievement.unlocked ? 'unlocked' : 'locked'} animate-slide-right`}
-                                    style={{ animationDelay: `${i * 0.05}s` }}
-                                    title={achievement.unlocked ? `Unlocked: ${achievement.name}` : 'Complete tasks to unlock'}
-                                >
-                                    <div className="achievement-icon">
-                                        {achievement.icon}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>
-                                            {achievement.name}
-                                        </div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                            {achievement.description}
-                                        </div>
-                                    </div>
-                                    {achievement.unlocked && (
-                                        <div style={{ fontSize: '11px', color: 'var(--accent-green)', fontWeight: 600 }}>
-                                            +{achievement.points}
-                                        </div>
-                                    )}
+                        
+                        {/* Recently Unlocked Achievements */}
+                        {achievements.filter(a => a.unlocked).length > 0 && (
+                            <div style={{ marginBottom: '16px' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--accent-green)', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span>✅</span> UNLOCKED
                                 </div>
-                            ))}
+                                <div className="achievements-container">
+                                    {achievements.filter(a => a.unlocked).slice(0, 3).map((achievement, i) => (
+                                        <div 
+                                            key={achievement.id} 
+                                            className={`achievement-badge unlocked tier-${achievement.tier || 'bronze'} animate-slide-right`}
+                                            style={{ animationDelay: `${i * 0.05}s` }}
+                                            title={`Achieved: ${achievement.name}`}
+                                        >
+                                            <div className="achievement-icon-wrapper">
+                                                <div className="achievement-icon">{achievement.icon}</div>
+                                                <div className="achievement-checkmark">✓</div>
+                                            </div>
+                                            <div className="achievement-content" style={{ flex: 1 }}>
+                                                <div className="achievement-header">
+                                                    <span className="achievement-name" style={{ fontSize: '13px', fontWeight: 600 }}>
+                                                        {achievement.name}
+                                                    </span>
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: 'var(--accent-green)', marginTop: '2px' }}>
+                                                    ✨ Achieved!
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-green)', textAlign: 'right' }}>
+                                                +{achievement.points}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Up Next - Achievements to unlock */}
+                        <div style={{ marginBottom: '20px' }}>
+                            <div style={{ fontSize: '11px', color: 'var(--accent-yellow)', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>🎯</span> UP NEXT
+                            </div>
+                            <div className="achievements-container">
+                                {achievements
+                                    .filter(a => !a.unlocked && a.progress && a.progress.percentage > 0)
+                                    .sort((a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0))
+                                    .slice(0, 3)
+                                    .map((achievement, i) => (
+                                        <div 
+                                            key={achievement.id} 
+                                            className={`achievement-badge locked tier-${achievement.tier || 'bronze'} animate-slide-right`}
+                                            style={{ animationDelay: `${i * 0.05}s` }}
+                                            title={achievement.description}
+                                        >
+                                            <div className="achievement-icon-wrapper">
+                                                <div className="achievement-icon" style={{ opacity: 0.6 }}>{achievement.icon}</div>
+                                                <div className="achievement-tier-icon">{achievement.tier_icon || '🥉'}</div>
+                                            </div>
+                                            <div className="achievement-content" style={{ flex: 1 }}>
+                                                <div className="achievement-header">
+                                                    <span className="achievement-name" style={{ fontSize: '13px', fontWeight: 600 }}>
+                                                        {achievement.name}
+                                                    </span>
+                                                    <span style={{ 
+                                                        fontSize: '9px', 
+                                                        textTransform: 'uppercase',
+                                                        padding: '2px 6px',
+                                                        borderRadius: '3px',
+                                                        background: 'var(--bg-secondary)',
+                                                        color: 'var(--text-muted)'
+                                                    }}>
+                                                        {achievement.tier || 'bronze'}
+                                                    </span>
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                                    {achievement.description}
+                                                </div>
+                                                {achievement.progress && (
+                                                    <div className="achievement-progress-mini">
+                                                        <div 
+                                                            className="achievement-progress-fill-mini" 
+                                                            style={{ width: `${achievement.progress.percentage}%` }}
+                                                        />
+                                                        <span className="achievement-progress-text">
+                                                            {achievement.progress.current}/{achievement.progress.target}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textAlign: 'right' }}>
+                                                {achievement.points}
+                                                <span style={{ fontSize: '9px', display: 'block', fontWeight: 400 }}>to earn</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
                         </div>
 
                         <button className="view-btn animate-fade-in" onClick={() => setShowTrendsModal(true)}>

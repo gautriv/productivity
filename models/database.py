@@ -77,15 +77,19 @@ def init_db():
         )
     ''')
     
-    # Achievements table - for gamification
+    # Achievements table - for gamification (world-class with tiers)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS achievements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            achievement_id TEXT UNIQUE,
             name TEXT NOT NULL,
             description TEXT,
             icon TEXT,
-            type TEXT CHECK(type IN ('streak', 'points', 'tasks', 'special')),
+            category TEXT,
+            tier TEXT CHECK(tier IN ('bronze', 'silver', 'gold', 'platinum', 'diamond')),
+            type TEXT,
             requirement INTEGER,
+            points INTEGER DEFAULT 0,
             unlocked_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -118,6 +122,26 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (task_id) REFERENCES tasks(id)
         )
+    ''')
+    
+    # Challenge history for daily challenges (prevents repetition, tracks completion)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS challenge_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challenge_date DATE UNIQUE NOT NULL,
+            challenge_id TEXT NOT NULL,
+            challenge_data TEXT,
+            completed BOOLEAN DEFAULT 0,
+            completed_at TIMESTAMP,
+            bonus_awarded BOOLEAN DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Create index for faster challenge lookups
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_challenge_date 
+        ON challenge_history(challenge_date)
     ''')
     
     db.commit()
@@ -184,4 +208,43 @@ def migrate_add_display_order():
 
         db.commit()
         print("Migration completed successfully!")
+
+
+def migrate_achievements_v2():
+    """Migrate achievements table to v2 schema with tiers"""
+    db = get_db()
+    cursor = db.cursor()
+    
+    # Check if achievement_id column exists
+    cursor.execute("PRAGMA table_info(achievements)")
+    columns = {column[1] for column in cursor.fetchall()}
+    
+    migrations_needed = []
+    
+    if 'achievement_id' not in columns:
+        migrations_needed.append("ADD COLUMN achievement_id TEXT")
+    if 'category' not in columns:
+        migrations_needed.append("ADD COLUMN category TEXT")
+    if 'tier' not in columns:
+        migrations_needed.append("ADD COLUMN tier TEXT")
+    if 'points' not in columns:
+        migrations_needed.append("ADD COLUMN points INTEGER DEFAULT 0")
+    
+    for migration in migrations_needed:
+        try:
+            cursor.execute(f'ALTER TABLE achievements {migration}')
+            print(f"Achievement migration: {migration}")
+        except Exception as e:
+            print(f"Migration skipped (may already exist): {migration}")
+    
+    db.commit()
+    print("Achievement table migration completed!")
+
+
+def run_all_migrations():
+    """Run all database migrations"""
+    print("Running database migrations...")
+    migrate_add_display_order()
+    migrate_achievements_v2()
+    print("All migrations completed!")
 

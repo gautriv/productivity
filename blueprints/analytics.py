@@ -1,11 +1,12 @@
 """
 Analytics Blueprint
-Advanced analytics endpoints with world-class algorithms
+World-class analytics endpoints with advanced algorithms
 """
 from flask import Blueprint, jsonify, request
 from datetime import datetime, date, timedelta
 from models.database import get_db, calculate_task_points
 from services.analytics import ProductivityAnalytics
+from services.analytics import TrendsEngine, InsightsEngine, BurnoutEngine
 from utils.helpers import handle_errors
 
 analytics_bp = Blueprint('analytics', __name__)
@@ -451,4 +452,282 @@ def get_burnout_analysis():
     days = request.args.get('days', 14, type=int)
     analysis = ProductivityAnalytics.analyze_burnout_risk(days)
     return jsonify(analysis)
+
+
+# ===== WORLD-CLASS ANALYTICS ENDPOINTS =====
+
+# ----- TRENDS ENGINE -----
+
+@analytics_bp.route('/trends/comprehensive', methods=['GET'])
+@handle_errors
+def get_comprehensive_trends():
+    """
+    Get world-class comprehensive trend analysis
+    Includes: predictive forecasting, momentum, velocity, patterns, anomalies
+    """
+    days = request.args.get('days', 30, type=int)
+    trends = TrendsEngine.get_comprehensive_trends(days)
+    return jsonify(trends)
+
+@analytics_bp.route('/trends/forecast', methods=['GET'])
+@handle_errors
+def get_forecast():
+    """Get 7-day productivity forecast"""
+    days = request.args.get('days', 30, type=int)
+    trends = TrendsEngine.get_comprehensive_trends(days)
+    
+    if trends.get('status') == 'success':
+        return jsonify(trends.get('forecast', {}))
+    return jsonify(trends)
+
+@analytics_bp.route('/trends/momentum', methods=['GET'])
+@handle_errors
+def get_momentum():
+    """Get current momentum indicator"""
+    days = request.args.get('days', 30, type=int)
+    trends = TrendsEngine.get_comprehensive_trends(days)
+    
+    if trends.get('status') == 'success':
+        return jsonify({
+            'momentum': trends.get('momentum', {}),
+            'velocity': trends.get('velocity', {}),
+            'performance_zone': trends.get('performance_zone', {})
+        })
+    return jsonify(trends)
+
+@analytics_bp.route('/trends/comparisons', methods=['GET'])
+@handle_errors
+def get_comparisons():
+    """Get comparative analysis (week-over-week, day-of-week, etc.)"""
+    days = request.args.get('days', 30, type=int)
+    trends = TrendsEngine.get_comprehensive_trends(days)
+    
+    if trends.get('status') == 'success':
+        return jsonify(trends.get('comparisons', {}))
+    return jsonify(trends)
+
+@analytics_bp.route('/trends/patterns', methods=['GET'])
+@handle_errors
+def get_trend_patterns():
+    """Get detected productivity patterns"""
+    days = request.args.get('days', 30, type=int)
+    trends = TrendsEngine.get_comprehensive_trends(days)
+    
+    if trends.get('status') == 'success':
+        return jsonify({
+            'patterns': trends.get('patterns', []),
+            'anomalies': trends.get('anomalies', [])
+        })
+    return jsonify(trends)
+
+@analytics_bp.route('/trends/moving-averages', methods=['GET'])
+@handle_errors
+def get_moving_averages():
+    """Get moving averages for smoothed trend visualization"""
+    days = request.args.get('days', 30, type=int)
+    trends = TrendsEngine.get_comprehensive_trends(days)
+    
+    if trends.get('status') == 'success':
+        return jsonify(trends.get('moving_averages', {}))
+    return jsonify(trends)
+
+# ----- INSIGHTS ENGINE -----
+
+@analytics_bp.route('/insights/comprehensive', methods=['GET'])
+@handle_errors
+def get_comprehensive_insights():
+    """
+    Get world-class comprehensive insights
+    Includes: AI recommendations, productivity DNA, unlocks, task pairings
+    """
+    days = request.args.get('days', 30, type=int)
+    insights = InsightsEngine.get_comprehensive_insights(days)
+    return jsonify(insights)
+
+@analytics_bp.route('/insights/productivity-dna', methods=['GET'])
+@handle_errors
+def get_productivity_dna():
+    """Get user's productivity DNA profile"""
+    days = request.args.get('days', 30, type=int)
+    insights = InsightsEngine.get_comprehensive_insights(days)
+    
+    if insights.get('status') == 'success':
+        return jsonify(insights.get('productivity_dna', {}))
+    return jsonify(insights)
+
+@analytics_bp.route('/insights/unlocks', methods=['GET'])
+@handle_errors
+def get_unlocks():
+    """Get productivity unlocks (hidden potential)"""
+    days = request.args.get('days', 30, type=int)
+    insights = InsightsEngine.get_comprehensive_insights(days)
+    
+    if insights.get('status') == 'success':
+        return jsonify({
+            'unlocks': insights.get('unlocks', []),
+            'task_pairings': insights.get('task_pairings', [])
+        })
+    return jsonify(insights)
+
+@analytics_bp.route('/insights/recommendations', methods=['GET'])
+@handle_errors
+def get_recommendations():
+    """Get actionable recommendations"""
+    days = request.args.get('days', 30, type=int)
+    insights = InsightsEngine.get_comprehensive_insights(days)
+    
+    if insights.get('status') == 'success':
+        # Filter to only actionable insights
+        actionable = [i for i in insights.get('insights', []) if i.get('action')]
+        return jsonify({
+            'recommendations': actionable[:10],
+            'count': len(actionable)
+        })
+    return jsonify(insights)
+
+# ----- BURNOUT ENGINE -----
+
+@analytics_bp.route('/burnout/comprehensive', methods=['GET'])
+@handle_errors
+def get_comprehensive_burnout():
+    """
+    Get world-class burnout analysis
+    Includes: risk scoring, indicators, energy reserves, resilience, recovery plan
+    """
+    days = request.args.get('days', 14, type=int)
+    analysis = BurnoutEngine.get_comprehensive_analysis(days)
+    return jsonify(analysis)
+
+@analytics_bp.route('/burnout/risk-level', methods=['GET'])
+@handle_errors
+def get_burnout_risk_level():
+    """Get current burnout risk level"""
+    days = request.args.get('days', 14, type=int)
+    analysis = BurnoutEngine.get_comprehensive_analysis(days)
+    
+    if analysis.get('status') == 'success':
+        return jsonify({
+            'burnout_score': analysis.get('burnout_score'),
+            'risk_level': analysis.get('risk_level'),
+            'quick_stats': analysis.get('quick_stats')
+        })
+    return jsonify(analysis)
+
+@analytics_bp.route('/burnout/indicators', methods=['GET'])
+@handle_errors
+def get_burnout_indicators():
+    """Get detailed burnout indicators"""
+    days = request.args.get('days', 14, type=int)
+    analysis = BurnoutEngine.get_comprehensive_analysis(days)
+    
+    if analysis.get('status') == 'success':
+        return jsonify({
+            'active_indicators': analysis.get('active_indicators', []),
+            'all_indicators': analysis.get('all_indicators', {})
+        })
+    return jsonify(analysis)
+
+@analytics_bp.route('/burnout/energy', methods=['GET'])
+@handle_errors
+def get_energy_status():
+    """Get energy reserves and work-life balance"""
+    days = request.args.get('days', 14, type=int)
+    analysis = BurnoutEngine.get_comprehensive_analysis(days)
+    
+    if analysis.get('status') == 'success':
+        return jsonify({
+            'energy_reserves': analysis.get('energy_reserves', {}),
+            'work_life_balance': analysis.get('work_life_balance', {}),
+            'stress_accumulation': analysis.get('stress_accumulation', {})
+        })
+    return jsonify(analysis)
+
+@analytics_bp.route('/burnout/resilience', methods=['GET'])
+@handle_errors
+def get_resilience():
+    """Get resilience score and factors"""
+    days = request.args.get('days', 14, type=int)
+    analysis = BurnoutEngine.get_comprehensive_analysis(days)
+    
+    if analysis.get('status') == 'success':
+        return jsonify(analysis.get('resilience_score', {}))
+    return jsonify(analysis)
+
+@analytics_bp.route('/burnout/recovery-plan', methods=['GET'])
+@handle_errors
+def get_recovery_plan():
+    """Get personalized recovery plan"""
+    days = request.args.get('days', 14, type=int)
+    analysis = BurnoutEngine.get_comprehensive_analysis(days)
+    
+    if analysis.get('status') == 'success':
+        return jsonify(analysis.get('recovery_plan', {}))
+    return jsonify(analysis)
+
+@analytics_bp.route('/burnout/prediction', methods=['GET'])
+@handle_errors
+def get_burnout_prediction():
+    """Get burnout trajectory prediction"""
+    days = request.args.get('days', 14, type=int)
+    analysis = BurnoutEngine.get_comprehensive_analysis(days)
+    
+    if analysis.get('status') == 'success':
+        return jsonify({
+            'prediction': analysis.get('prediction', {}),
+            'historical_comparison': analysis.get('historical_comparison', {})
+        })
+    return jsonify(analysis)
+
+# ----- COMBINED DASHBOARD -----
+
+@analytics_bp.route('/dashboard', methods=['GET'])
+@handle_errors
+def get_analytics_dashboard():
+    """Get combined analytics dashboard with all key metrics"""
+    days = request.args.get('days', 14, type=int)
+    
+    # Get all analytics
+    trends = TrendsEngine.get_comprehensive_trends(days)
+    insights = InsightsEngine.get_comprehensive_insights(days)
+    burnout = BurnoutEngine.get_comprehensive_analysis(days)
+    
+    # Combine key metrics
+    dashboard = {
+        'status': 'success',
+        'summary': {},
+        'alerts': [],
+        'top_insights': [],
+        'health_scores': {}
+    }
+    
+    # Extract key metrics
+    if trends.get('status') == 'success':
+        dashboard['summary']['trend'] = trends.get('trend', {})
+        dashboard['summary']['momentum'] = trends.get('momentum', {})
+        dashboard['summary']['performance_zone'] = trends.get('performance_zone', {})
+        dashboard['summary']['forecast_outlook'] = trends.get('forecast', {}).get('summary', {}).get('outlook')
+    
+    if insights.get('status') == 'success':
+        dashboard['top_insights'] = insights.get('insights', [])[:5]
+        dashboard['productivity_dna'] = insights.get('productivity_dna', {})
+    
+    if burnout.get('status') == 'success':
+        dashboard['health_scores'] = {
+            'burnout_risk': burnout.get('burnout_score', 0),
+            'risk_level': burnout.get('risk_level', {}),
+            'energy': burnout.get('energy_reserves', {}),
+            'work_life_balance': burnout.get('work_life_balance', {}),
+            'resilience': burnout.get('resilience_score', {})
+        }
+        
+        # Generate alerts based on risk
+        if burnout.get('burnout_score', 0) >= 50:
+            dashboard['alerts'].append({
+                'type': 'burnout_warning',
+                'icon': '⚠️',
+                'message': f'Burnout risk at {burnout.get("burnout_score", 0):.0f}%. Take action.',
+                'priority': 'high'
+            })
+    
+    return jsonify(dashboard)
 

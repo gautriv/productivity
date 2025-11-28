@@ -1303,33 +1303,53 @@
                             </div>
                         )}
 
-                        <div className="panel-title">🏆 Achievements</div>
-                        <div style={{ marginBottom: '20px' }}>
-                            {achievements.slice(0, 4).map((achievement, i) => (
-                                <div 
-                                    key={achievement.id} 
-                                    className={`achievement-badge ${achievement.unlocked ? 'unlocked' : 'locked'} animate-slide-right`}
-                                    style={{ animationDelay: `${i * 0.05}s` }}
-                                    title={achievement.unlocked ? `Unlocked: ${achievement.name}` : 'Complete tasks to unlock'}
-                                >
-                                    <div className="achievement-icon">
-                                        {achievement.icon}
+                        <div className="panel-title">
+                            🏆 Achievements
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '8px', fontWeight: 400 }}>
+                                {achievements.filter(a => a.unlocked).length}/{achievements.length}
+                            </span>
+                        </div>
+                        <div className="achievements-scroll-container">
+                            {(() => {
+                                // Show all achievements: unlocked first, then locked
+                                const unlockedAchievements = achievements.filter(a => a.unlocked);
+                                const lockedAchievements = achievements.filter(a => !a.unlocked);
+                                const allAchievements = [...unlockedAchievements, ...lockedAchievements];
+
+                                return allAchievements.map((achievement, i) => (
+                                    <div
+                                        key={achievement.id}
+                                        className={`achievement-badge ${achievement.unlocked ? 'unlocked' : 'locked'} animate-slide-right`}
+                                        style={{ animationDelay: `${i * 0.02}s` }}
+                                        title={achievement.unlocked ? `Unlocked: ${achievement.name}` : `Locked: ${achievement.description}`}
+                                    >
+                                        <div className="achievement-icon">
+                                            {achievement.unlocked ? achievement.icon : '🔒'}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px', color: achievement.unlocked ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                                                {achievement.name}
+                                            </div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                                {achievement.unlocked
+                                                    ? (achievement.description_unlocked || achievement.description)
+                                                    : achievement.description
+                                                }
+                                            </div>
+                                        </div>
+                                        {achievement.unlocked && (
+                                            <div style={{ fontSize: '11px', color: 'var(--accent-green)', fontWeight: 600 }}>
+                                                +{achievement.points}
+                                            </div>
+                                        )}
+                                        {!achievement.unlocked && (
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                                {achievement.points} pts
+                                            </div>
+                                        )}
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>
-                                            {achievement.name}
-                                        </div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                            {achievement.description}
-                                        </div>
-                                    </div>
-                                    {achievement.unlocked && (
-                                        <div style={{ fontSize: '11px', color: 'var(--accent-green)', fontWeight: 600 }}>
-                                            +{achievement.points}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                ));
+                            })()}
                         </div>
 
                         <button className="view-btn animate-fade-in" onClick={() => setShowTrendsModal(true)}>
